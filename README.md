@@ -5,4 +5,18 @@ This application is written in Ruby and it uses the [Sequel](http://sequel.jerem
 
 This script currently creates the tables, sets not null constraints and primary keys. It does not yet handle creating the foreign key relationships.
 
-*Note* The CSV files were created using Excel to open the parseable file and then perform an export to CSV. Excel will put a Byte Order Marker (BOM) in the file, which throws off the standard ruby CSV parsing library. The CSV files were re-encoded to UTF-8 using Visual Studio Code.
+**Note** The CSV files were created using Excel to open the parseable file and then perform an export to CSV. Excel will put a Byte Order Marker (BOM) in the file, which throws off the standard ruby CSV parsing library. The CSV files were re-encoded to UTF-8 using Visual Studio Code.
+
+## Prerequisites
+
+This was built using ruby 2.6.2. It used inline [Bundler](https://bundler.io/) to manage dependencies. Assuming you have ruby installed, you can:
+
+    gem install bundler
+
+## Running
+
+Just run the script:
+
+    ruby build_db.rb
+
+The connection information exists in the ruby file. It assumes that the database has been created and is empty. It will create all of the columns after that.
