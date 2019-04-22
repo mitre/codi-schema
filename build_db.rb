@@ -16,6 +16,9 @@ DB = Sequel.connect(adapter: 'postgres', :host => 'localhost',
 
 DB.loggers << Logger.new($stdout)
 
+DB.extension :identifier_mangling
+DB.quote_identifiers = false
+
 TYPE_MAPPING = {'Text' => 'varchar', 'Date' => 'date', 'Number' => 'numeric'}
 
 def data_type(cdm_type_description)
@@ -32,7 +35,7 @@ relational = CSV.read('relational.csv', headers: true)
 constraints = CSV.read('constraints.csv', headers: true)
 by_table = fields.group_by {|r| r['TABLE_NAME']}
 by_table.each_pair do |table_name, rows|
-  DB.create_table(table_name) do
+  DB.create_table(table_name.to_sym) do
     rows.each do |row|
       row_attributes = {}
       field_name = row['FIELD_NAME']
@@ -45,7 +48,7 @@ by_table.each_pair do |table_name, rows|
              r['FIELD_NAME'] == field_name}
         row_attributes[:null] = false
       end
-      column field_name, row_attributes[:type], row_attributes
+      column field_name.to_sym, row_attributes[:type], row_attributes
     end
 
     ck = relational.find {|r| r['TABLE_NAME'] == table_name && r['RELATION'] == 'Composite Key'}
