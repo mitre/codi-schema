@@ -30,12 +30,14 @@ def data_type(cdm_type_description)
     type_description
 end
 
+DB.create_schema :CDM
+
 fields = CSV.read('fields.csv', headers: true)
 relational = CSV.read('relational.csv', headers: true)
 constraints = CSV.read('constraints.csv', headers: true)
 by_table = fields.group_by {|r| r['TABLE_NAME']}
 by_table.each_pair do |table_name, rows|
-  DB.create_table(table_name.to_sym) do
+  DB.create_table(Sequel[:CDM][table_name.to_sym]) do
     rows.each do |row|
       row_attributes = {}
       field_name = row['FIELD_NAME']
