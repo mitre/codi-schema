@@ -61,4 +61,6 @@ by_table.each_pair do |table_name, rows|
   end
 end
 
+ancillary_tables_sql = File.read('ancillary_codi_tables.sql')
+DB << ancillary_tables_sql
 
