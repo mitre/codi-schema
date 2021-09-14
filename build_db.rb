@@ -30,6 +30,7 @@ def data_type(cdm_type_description)
     type_description
 end
 
+# DB.drop_schema("CDM", cascade: true)
 DB.create_schema :CDM
 
 fields = CSV.read('fields.csv', headers: true)
@@ -62,5 +63,6 @@ by_table.each_pair do |table_name, rows|
 end
 
 ancillary_tables_sql = File.read('ancillary_codi_tables.sql')
+puts(ancillary_tables_sql)
 DB << ancillary_tables_sql
 
