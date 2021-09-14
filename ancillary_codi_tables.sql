@@ -1,5 +1,14 @@
 --@(#) script.ddl
 
+/*
+  For CODI at North Carolina
+  Updated September, 14, 2021 from CODI at Colorado.
+	1. Commented out IDENTIFIER tables, to be removed.
+	2. Added SDOH_INDICATOR, HOUSEHOLD_LINK to the CODI schema
+	3. Added PRIVATE_ADDRESS_HISTORY, PRIVATE_DEMOGRAPHIC to the CDM schema
+		Assuming CDM schema is already created.
+*/
+
 CREATE SCHEMA CODI;
 
 --The ALERT table contains one record for each distinct kind of alert. Alerts are components of a clinical decision support system (CDS). Given the gamut of possible alerts and the idiosyncrasies of CDS implementations, CODI only captures a prose description of the intended function of the alert. Only obesity- or weight-related alerts should be captured for CODI.
@@ -34,6 +43,7 @@ CREATE TABLE CODI.FAMILY_HISTORY
 	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
 
+/* IDENTIFIER Retired and replaced with PRIVATE_DEMOGRAPHIC and PRIVATE_ADDRESS_HISTORY from PCORnet CDM  ---
 --The IDENTIFIER table contains one row for each unique combination of identifying information. The intention is that this table can be stored separately from research data because it has PII. The exact configuration will be determined experimentally. These experiments will determine which attributes to include and how those attributes will be normalized by each site (prior to hashing).
 CREATE TABLE CODI.IDENTIFIER
 (
@@ -67,6 +77,7 @@ CREATE TABLE CODI.IDENTIFIER
 	PRIMARY KEY(IDENTIFIER_ID),
 	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
+*/
 
 --The PROGRAM table contains one record for each distinct program. A program comprises a collection of interventions intended to produce a particular outcome.
 CREATE TABLE CODI.PROGRAM
@@ -157,6 +168,17 @@ CREATE TABLE CODI.LINK
 	PRIMARY KEY(LINKID),
 	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
+-- A household link represents a connection between people (identified anonymously) who are determined to be members  
+-- of the same household because they have the same physical address at the time the household link is established. 
+CREATE TABLE CODI.HOUSEHOLD_LINK
+(
+	-- An iteration of the household record linkage process.
+	LINK_ITERATION int NOT NULL,
+	HOUSEHOLD_LINKID VARCHAR,
+	PATID varchar NOT NULL,
+	PRIMARY KEY(HOUSEHOLD_LINKID),
+	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
+);
 
 --The ASSET_DELIVERY table contains one record for each contiguous period of time during which a person consistently receives assets. An asset is a resource transferred by a program to an individual.
 CREATE TABLE CODI.ASSET_DELIVERY
@@ -181,6 +203,7 @@ CREATE TABLE CODI.ASSET_DELIVERY
 	CONSTRAINT fk_PROGRAM FOREIGN KEY(PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAM_ID)
 );
 
+/* IDENTIFIER_HASH_BUNDLE Retired, files used instead  ---
 --The IDENTITY_HASH_BUNDLE table contains one record for each record in the IDENTIFIER table. By storing the hash values into their own table, this table can appear in a data warehouse instance that eschews PII.
 CREATE TABLE CODI.IDENTITY_HASH_BUNDLE
 (
@@ -194,6 +217,7 @@ CREATE TABLE CODI.IDENTITY_HASH_BUNDLE
 	UNIQUE(IDENTIFIERID),
 	CONSTRAINT fk_IDENTIFIER FOREIGN KEY(IDENTIFIERID) REFERENCES CODI.IDENTIFIER (IDENTIFIER_ID)
 );
+*/
 
 --The SESSION table contains one record for each session. A session is a specific point in time where a child/family is involved in programming that focuses on obesity, obesity prevention, healthy eating, or active living.
 --In a clinical setting, a session corresponds to a visit. There may be multiple visits in a single encounter. The ENCOUNTERID field is required for clinical sessions.
@@ -247,20 +271,75 @@ CREATE TABLE CODI.SESSION_ALERT
 	CONSTRAINT fk_ALERT FOREIGN KEY(ALERTID) REFERENCES CODI.ALERT (ALERT_ID)
 );
 
---The CENSUS_LOCATION table table holds patient geographic location information collected at healthcare encounters.
-CREATE TABLE CODI.CENSUS_LOCATION
+--The SDOH_INDICATOR table contains zero to many records for a PATID in DEMOGRAPHIC.
+-- An indicator is signals the existence of evidence that pertains to a category of social determinants of health (SDOH) such as a screening response or condition for a person. 
+CREATE TABLE CODI.SDOH_INDICATOR
 (
 	PATID varchar NOT NULL,
-	LOC_START date NOT NULL,
-	LOC_END date,
-	GEOCODE varchar (15),
-	GEOCODE_BOUNDARY_YEAR int,
-	GEOLEVEL char (1),
-	LATITUDE numeric (8),
-	LONGITUDE numeric (8),
-	CENSUS_LOCATION_ID varchar,
+	--A category name for social factors that can determine health outcomes.
+	SDOH_INDICATOR_NAME VARCHAR NOT NULL,
+	--A date on which a data owner, partner, or researcher has made an  assertion indicating the presence of SDOH evidence.
+	ASSERTION_DATE date NOT NULL,
+	-- A name of a table in the CODI SQL schema in which there is some evidence pertaining to the CODI SDOH indicator category.
+	EVIDENCE_TABLE_NAME VARCHAR,
+	EVIDENCE_EXPLANATION VARCHAR,
+	SDOH_INDICATOR_ID VARCHAR NOT NULL,
+	PRIMARY KEY(SDOH_INDICATOR_ID),
+	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
+	CHECK(SDOH_INDICATOR_NAME in 
+	('FOOD_SECURITY', 'HOUSING_SECURITY', 'TRANSPORTATION_SECURITY', 
+		'INTERPERSONAL_VIOLENCE_SECURITY', 'FINANCIAL_SECURITY', 'HEALTH_INSURANCE_SECURITY'))
+);
 
-	CHECK(GEOLEVEL in ('B', 'G', 'T', 'C', 'Z', 'P', 'U')),
-	PRIMARY KEY(CENSUS_LOCATION_ID),
+--Protected table that is intended to provide a standardized representation of the personally-identifiable 
+-- information (PII) that is needed to support local activities related to record linkage. Contains one record per PATID.
+CREATE TABLE CDM.PRIVATE_DEMOGRAPHIC
+(
+	PATID varchar NOT NULL,
+	PAT_FIRSTNAME VARCHAR (255) NOT NULL,
+	PAT_MIDDLE_NAME VARCHAR (255) NULL,
+	PAT_LASTNAME VARCHAR (255) NOT NULL,
+	PAT_MAIDENNAME VARCHAR (255) NULL,
+	BIRTH_DATE date NULL,
+	--Sex assigned at birth.
+	SEX char (2) NULL,
+	RACE char (2) NULL,
+	HISPANIC char (2) NULL,
+	--Primary e-mail address for the patient.
+	PRIMARY_EMAIL VARCHAR (255) NULL,
+	--Primary phone number for the patient (if known). 10-digit US phone number.
+	PRIMARY_PHONE CHAR(10) NULL,
+	CHECK (SEX in ('A', 'F', 'M', 'NI', 'UN', 'OT')),
+	CHECK (RACE in ('01', '02', '03','04', '05', '06', '07', 'NI', 'UN', 'OT')),
+	CHECK (HISPANIC in ('Y', 'N', 'R', 'NI', 'UN', 'OT')),
+	PRIMARY KEY(PATID),
+	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
+);
+
+-- Protected table that can be used to store elements of a patient’s address that are considered personal health information (PHI).
+CREATE TABLE CDM.PRIVATE_ADDRESS_HISTORY
+(
+	ADDRESSID varchar NOT NULL,
+	PATID varchar NOT NULL,
+	-- Primary address line (e.g., street name and number)
+	ADDRESS_STREET varchar (255) NULL,
+	-- Remaining address details (e.g., suite, post office box, other details)
+	ADDRESS_DETAIL varchar (255) NULL,
+	ADDRESS_CITY varchar (255) NULL,
+	ADDRESS_ZIP5 char(5) NULL,
+	ADDRESS_STATE char(2) NULL,
+	ADDRESS_USE char(2) NOT NULL,
+	ADDRESS_TYPE char(2) NOT NULL,
+	ADDRESS_PREFERRED char(2) NOT NULL,
+	CHECK (ADDRESS_STATE in ('AL','AK','AS','AZ','AR','CA',
+	'CO','CT','DE','DC','FM','FL','GA','GU','HI','ID',
+	'IL','IN','IA','KS','KY','LA','ME','MH','MD','MA','MI','MN','MS',
+	'MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','MP','OH','OK',
+	'OR','PW','PA','PR','RI','SC','SD','TN','TX','UT','VT','VI','VA',
+	'WA','WV','WI','WY','AE','AP','AA','NI','UN','OT')),
+	CHECK(ADDRESS_USE in ('HO','WO','TP','OL','NI','UN','OT')),
+	CHECK(ADDRESS_TYPE in('PO','PH','NI','UN','OT')),
+	CHECK(ADDRESS_PREFERRED in('Y', 'N', 'R', 'NI', 'UN', 'OT')),
+	PRIMARY KEY(ADDRESSID),
 	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );

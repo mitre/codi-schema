@@ -63,6 +63,4 @@ by_table.each_pair do |table_name, rows|
 end
 
 ancillary_tables_sql = File.read('ancillary_codi_tables.sql')
-puts(ancillary_tables_sql)
 DB << ancillary_tables_sql
-
