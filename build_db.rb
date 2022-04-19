@@ -62,5 +62,14 @@ by_table.each_pair do |table_name, rows|
   end
 end
 
-ancillary_tables_sql = File.read('ancillary_codi_tables.sql')
-DB << ancillary_tables_sql
+ancillary_tables_sql_files = [
+  'ancillary_codi_tables.sql',
+  'schema_omop.sql',
+  'schema_vdw.sql',
+  'data_vdw_census_demog.sql'
+]
+
+ancillary_tables_sql_files.each do |sql_file|
+  ancillary_tables_sql = File.read(sql_file)
+  DB << ancillary_tables_sql
+end

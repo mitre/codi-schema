@@ -20,11 +20,11 @@ CREATE TABLE CODI.ALERT
 	ALERT_TRIGGER varchar (255) NOT NULL,
 	--A description of how the alert is presented to the user.
 	ALERT_FORM varchar (255) NOT NULL,
-	ALERT_ID varchar,
-	PRIMARY KEY(ALERT_ID)
+	ALERTID varchar,
+	PRIMARY KEY(ALERTID)
 );
 
---The FAMILY_HISTORY table stores information regarding a child’s family history of disease. A separate record is created for each report of a condition that a family member has. Absence of a record in this table is not indicative the absence of a condition.
+--The FAMILY_HISTORY table stores information regarding an individual's family history of disease. A separate record is created for each report of a condition that a family member has. Absence of a record in this table is not indicative the absence of a condition.
 --This information is intended to be pulled from the patient's record, not by linking to a family member's medical record.
 CREATE TABLE CODI.FAMILY_HISTORY
 (
@@ -40,44 +40,56 @@ CREATE TABLE CODI.FAMILY_HISTORY
 	PATID varchar NOT NULL,
 	CHECK(CONDITION_TYPE in ('09', '10', '11', 'SM', 'NI', 'UN', 'OT')),
 	PRIMARY KEY(FAMILY_HISTORY_ID),
-	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
+	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
 
-/* IDENTIFIER Retired and replaced with PRIVATE_DEMOGRAPHIC and PRIVATE_ADDRESS_HISTORY from PCORnet CDM  ---
---The IDENTIFIER table contains one row for each unique combination of identifying information. The intention is that this table can be stored separately from research data because it has PII. The exact configuration will be determined experimentally. These experiments will determine which attributes to include and how those attributes will be normalized by each site (prior to hashing).
-CREATE TABLE CODI.IDENTIFIER
+--The PREGNANCY table contains one record for each pregnancy.
+CREATE TABLE CODI.PREGNANCY
 (
-	--A given name for the child.
-	GIVEN_NAME varchar (255) NULL,
-	--A family name for the child.
-	FAMILY_NAME varchar (255) NULL,
-	--A middle initial for the child.
-	MIDDLE_INITIAL varchar (255) NULL,
-	--An insurance number for the child as it appears on an insurance card.
-	INSURANCE_NUMBER varchar (255) NULL,
-	--A given name for a parent of the child.
-	PARENT_GIVEN_NAME varchar (255) NULL,
-	--A family name for a parent of the child.
-	PARENT_FAMILY_NAME varchar (255) NULL,
-	--An address for the child, including number/name/unit (i.e., the information sometimes referred to as street line 1 and street line 2).
-	HOUSEHOLD_STREET_ADDRESS varchar (255) NULL,
-	--A ZIP code for the child.
-	HOUSEHOLD_ZIP varchar (255) NULL,
-	--A phone number for the child.
-	HOUSEHOLD_PHONE varchar (255) NULL,
-	--An email address for the child.
-	HOUSEHOLD_EMAIL varchar (255) NULL,
-	--Date of birth.
-	BIRTH_DATE date NULL,
-	--Sex assigned at birth.
-	SEX char (2) NULL,
-	IDENTIFIER_ID varchar,
+	--A date of the parent's last menstrual period.
+	LAST_MENSES_DATE date NULL,
+	--An estimated date of delivery.
+	ESTIMATED_DELIVERY_DATE date NULL,
+	--An actual date of delivery.
+	DELIVERY_DATE date NULL,
+	--A number of fetuses involved in this pregnancy.
+	FETUS_COUNT integer NULL,
+	--A date of the parent's first prenatal healthcare visit.
+	FIRST_PRENATAL_DATE date NULL,
+	--True if the parent took dietary supplements during pregnancy.
+	DIETARY_SUPPLEMENT boolean NULL,
+	--A number of cigarettes the parent smoked (per day) before becoming pregnant.
+	CIGARETTE_PRE float NULL,
+	--A number of cigarettes the parent smoked (per day) during the first trimester.
+	CIGARETTE_FIRST float NULL,
+	--A number of cigarettes the parent smoked (per day) during the second trimester.
+	CIGARETTE_SECOND float NULL,
+	--A number of cigarettes the parent smoked (per day) during the last trimester.
+	CIGARETTE_LAST float NULL,
+	--A number of cigarettes the parent smoked (per day) postpartum.
+	CIGARETTE_POST float NULL,
+	--A number of alcoholic drinks the parent consumed (per day) before becoming pregnant.
+	DRINKS_PRE float NULL,
+	--A number of alcoholic drinks the parent consumed (per day) during the last trimester.
+	DRINKS_LAST float NULL,
+	--A number of times the parent has been pregnant, including this pregnancy.
+	GRAVIDA integer NULL,
+	--A number of viable pregnancies that had multiple fetuses.
+	PARA integer NULL,
+	--A measure of the parent's weight (in pounds) before becoming pregnant.
+	PRE_PREGNANCY_WT float NULL,
+	--A measure of the parent's body mass index before becoming pregnant.
+	PRE_PREGNANCY_BMI float NULL,
+	--A measure of the parent's weight (in pounds) at delivery.
+	DELIVERY_WT float NULL,
+	PREGNANCYID varchar,
+	DELIVERY_PROCEDUREID varchar,
 	PATID varchar NOT NULL,
-	CHECK(SEX in ('A', 'F', 'M', 'NI', 'UN', 'OT')),
-	PRIMARY KEY(IDENTIFIER_ID),
-	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
+	PRIMARY KEY(PREGNANCYID),
+	UNIQUE(DELIVERY_PROCEDUREID),
+	FOREIGN KEY(DELIVERY_PROCEDUREID) REFERENCES CDM.PROCEDURES (PROCEDURESID),
+	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
-*/
 
 --The PROGRAM table contains one record for each distinct program. A program comprises a collection of interventions intended to produce a particular outcome.
 CREATE TABLE CODI.PROGRAM
@@ -92,7 +104,7 @@ CREATE TABLE CODI.PROGRAM
 	AIM_ACTIVITY boolean NULL,
 	--True if the aim of the program includes improving weight status.
 	AIM_WEIGHT boolean NULL,
-	--A total amount of time (in hours) a child should spend in the program. This field should equal DURATION x FREQUENCY x LENGTH (weeks x sessions/week x hours/session).
+	--A total amount of time (in hours) an individual should spend in the program. This field should equal DURATION x FREQUENCY x LENGTH (weeks x sessions/week x hours/session).
 	PRESCRIBED_TOTAL_DOSE float NULL,
 	--A measure of the time (in weeks) from start to finish.
 	PRESCRIBED_PROGRAM_DURATION float NULL,
@@ -100,10 +112,6 @@ CREATE TABLE CODI.PROGRAM
 	PRESCRIBED_SESSION_FREQUENCY float NULL,
 	--A number of hours delivered each session.
 	PRESCRIBED_SESSION_LENGTH float NULL,
-	--A setting in which the program is offered (clinical or community).
-	PROGRAM_SETTING char (2) NULL,
-	--An indication of the way program was delivered (e.g., individual, group, phone).
-	PROGRAM_MODE char (1) NULL,
 	--A primary location at which this program's sessions are administered, expressed as an address.
 	LOCATION_ADDRESS varchar (255) NULL,
 	--A latitude of the corresponding address location.
@@ -111,21 +119,28 @@ CREATE TABLE CODI.PROGRAM
 	--A latitude of the corresponding address location.
 	LOCATION_LONGITUDE numeric (8) NULL,
 	--A primary location at which this program's sessions are administered, expressed as a geocode.
-	LOCATION_GEOCODE varchar(15) NULL,
+	LOCATION_GEOCODE varchar (15) NULL,
 	--A census year for which the corresponding geocode location applies.
 	LOCATION_BOUNDARY_YEAR numeric (8) NULL,
+	--A numeric estimate of the percentage of all sessions missing from the SESSION table (based on intended dose) for this program; 0% indicates a belief that the session information is fully populated.
+	SESSION_OMISSION_PERCENT float NULL,
+	--A description of the circumstances under which session information for this program is missing; this field is required when the omission percent is greater than 0%.
+	SESSION_OMISSION_DESCRIPTION varchar (255) NULL,
+	--True if session information for this program is systematically missing (e.g., because only half of the sessions are documented in an EHR).
+	SESSION_OMISSION_SYSTEMATIC boolean NULL,
+	--A setting in which the program is offered (clinical or community).
+	PROGRAM_SETTING char (2) NULL,
 	--A specificity of the geocode location.
 	--This can be assessed using logic that considers the length of the GEOCODE value (2 characters for state; 5 characters for county; 11 characters for census tract).
 	LOCATION_GEOLEVEL char (1) NULL,
-	PROGRAM_ID varchar,
-	PROGRAMID varchar NOT NULL,
+	PROGRAMID varchar,
+	AFFILIATED_PROGRAMID varchar NOT NULL,
 	CHECK(PROGRAM_SETTING in ('CL', 'CO')),
-	CHECK(PROGRAM_MODE in ('I', 'G', 'W', 'T', 'M')),
 	CHECK(LOCATION_GEOLEVEL in ('B', 'G', 'T', 'C', 'Z', 'P', 'U')),
-	PRIMARY KEY(PROGRAM_ID),
-	UNIQUE(PROGRAMID),
+	PRIMARY KEY(PROGRAMID),
+	UNIQUE(AFFILIATED_PROGRAMID),
 	--The PROGRAM table contains one record for each distinct program. A program comprises a collection of interventions intended to produce a particular outcome.
-	CONSTRAINT fk_PROGRAM FOREIGN KEY(PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAM_ID)
+	FOREIGN KEY(AFFILIATED_PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID)
 );
 
 --The REFERRAL table contains one record for each outgoing or incoming referral.
@@ -135,27 +150,27 @@ CREATE TABLE CODI.REFERRAL
 	REFERRAL_DATE date NOT NULL,
 	--An indication of whether the referral was incoming or outgoing.
 	DIRECTION char (1) NOT NULL,
+	--A final disposition of the referral.
+	REFERRAL_STATUS char (2) NULL,
+	--An indication of whether prior authorization was required for the referral.
+	REFERRAL_PRIOR_AUTH char (2) NULL,
 	--An organization that initiated the referral.
 	SOURCE_ORGANIZATION varchar (6) NOT NULL,
 	--An organization to which the referral was sent.
 	DESTINATION_ORGANIZATION varchar (6) NOT NULL,
 	--A clinical specialty for which the patient is being referred.
 	DESTINATION_SPECIALTY varchar (10) NULL,
-	--A final disposition of the referral.
-	REFERRAL_STATUS char (2) NULL,
-	--An inidication of whether prior authorization was required for the referral.
-	REFERRAL_PRIOR_AUTH char (2) NULL,
-	REFERRAL_ID varchar,
-	ENCOUNTERID varchar,
+	REFERRALID varchar,
 	SOURCE_PROVIDERID varchar,
+	ENCOUNTERID varchar,
 	PATID varchar NOT NULL,
 	CHECK(DIRECTION in ('I', 'O')),
 	CHECK(REFERRAL_STATUS in ('A', 'D', 'NI', 'UN', 'OT')),
 	CHECK(REFERRAL_PRIOR_AUTH in ('Y', 'N', 'R', 'NI', 'UN', 'OT')),
-	PRIMARY KEY(REFERRAL_ID),
-	CONSTRAINT fk_ENCOUNTER FOREIGN KEY(ENCOUNTERID) REFERENCES CDM.ENCOUNTER (ENCOUNTERID),
-	CONSTRAINT fk_SOURCE_PROVIDER FOREIGN KEY(SOURCE_PROVIDERID) REFERENCES CDM.PROVIDER (PROVIDERID),
-	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
+	PRIMARY KEY(REFERRALID),
+	FOREIGN KEY(SOURCE_PROVIDERID) REFERENCES CDM.PROVIDER (PROVIDERID),
+	FOREIGN KEY(ENCOUNTERID) REFERENCES CDM.ENCOUNTER (ENCOUNTERID),
+	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
 
 --The LINK table contains one record for each person in the demographics table for each iteration of record linkage. Each iteration establishes a new LINKID for each person.
@@ -166,18 +181,39 @@ CREATE TABLE CODI.LINK
 	LINKID varchar,
 	PATID varchar NOT NULL,
 	PRIMARY KEY(LINKID),
-	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
+	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
 -- A household link represents a connection between people (identified anonymously) who are determined to be members  
 -- of the same household because they have the same physical address at the time the household link is established. 
 CREATE TABLE CODI.HOUSEHOLD_LINK
 (
+	--A unique identifier for a household
+	HOUSEHOLDID varchar NOT NULL,
 	-- An iteration of the household record linkage process.
 	LINK_ITERATION int NOT NULL,
-	HOUSEHOLD_LINKID VARCHAR,
 	PATID varchar NOT NULL,
-	PRIMARY KEY(HOUSEHOLD_LINKID),
-	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
+	PRIMARY KEY(HOUSEHOLDID),
+	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
+);
+
+--A signal conveying the existence of information about social circumstance(s) considered to be a determinant of health for an individual patient or program participant. The information may come from an administered SDOH screening or diagnosis or problem associated with the individual and is relevant to one of the SDOH categories (e.g., FOOD_DOMAIN, FINANCIAL_DOMAIN). The purpose of the evidence indicator is to provide a short-cut for knowing if relevant information exists and does not indicate whether a social risk exists. 
+CREATE TABLE CODI.SDOH_EVIDENCE_INDICATOR
+(
+	--A date on which a data owner, partner, or researcher has made an assertion indicating the presence of SDOH evidence. This date corresponds to the data partner's most recent determination of available evidence and does not necessarily match submission dates of any of the SDOH evidence. CODI is not expected to maintain a history of assertions, only one assertion based on the data partner's supplied evidence. 
+	EVIDENCE_DATE date NOT NULL,
+	--A name of a table in the CODI schema in which there is some evidence pertaining to the CODI SDOH indicator category. The evidence may be a screening response (in PRO_CM), or a reported problem (in CONDITION or DIAGNOSIS), or some other information stored in a CODI table. 
+	EVIDENCE_TABLE_NAME varchar (255) NULL,
+	--For indicator assertions without CODI data evidence; an explanation for the assertion. 
+	EVIDENCE_EXPLANATION varchar (255) NULL,
+	--An identifier for a specific row in the table referenced in the EVIDENCE_TABLE_NAME that contains evidence of a potential social determinant.
+	EVIDENCE_ROWID varchar NULL,
+	--A social topic area pertaining to circumstances which can determine health outcomes for an individual.
+	SDOH_CATEGORY char (29) NOT NULL,
+	SDOH_EVIDENCE_INDICATOR_ID varchar,
+	PATID varchar NOT NULL,
+	CHECK(SDOH_CATEGORY in ('FOOD_DOMAIN', 'HOUSING_STABILITY_DOMAIN', 'HOUSING_ADEQUACY_DOMAIN', 'TRANSPORTATION_DOMAIN', 'INTERPERSONAL_VIOLENCE_DOMAIN', 'FINANCIAL_DOMAIN', 'MATERIAL_NECESSESITIES_DOMAIN', 'EMPLOYMENT_DOMAIN', 'HEALTH_INSURANCE_DOMAIN', 'ELDER_CARE_DOMAIN', 'EDUCATION_DOMAIN', 'STRESS_DOMAIN', 'VETERAN_DOMAIN')),
+	PRIMARY KEY(SDOH_EVIDENCE_INDICATOR_ID),
+	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
 
 --The ASSET_DELIVERY table contains one record for each contiguous period of time during which a person consistently receives assets. An asset is a resource transferred by a program to an individual.
@@ -199,27 +235,92 @@ CREATE TABLE CODI.ASSET_DELIVERY
 	CHECK(ASSET_PURPOSE in ('CC', 'FO', 'HI', 'TR', 'NI', 'UN', 'OT')),
 	CHECK(DELIVERY_FREQ_UNIT in ('O', 'D', 'W', 'M', 'Y')),
 	PRIMARY KEY(ASSET_DELIVERY_ID),
-	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
-	CONSTRAINT fk_PROGRAM FOREIGN KEY(PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAM_ID)
+	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
+	FOREIGN KEY(PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID)
 );
 
-/* IDENTIFIER_HASH_BUNDLE Retired, files used instead  ---
---The IDENTITY_HASH_BUNDLE table contains one record for each record in the IDENTIFIER table. By storing the hash values into their own table, this table can appear in a data warehouse instance that eschews PII.
-CREATE TABLE CODI.IDENTITY_HASH_BUNDLE
+--A curriculum component is a standard element of a program. A program can comprise a fixed curriculum with a predefined endpoint and an enumerated set of standard sessions. Alternatively, a program can comprise a recurring curriculum with no endpoint and a set of standard sessions that recur with some frequency.
+CREATE TABLE CODI.CURRICULUM_COMPONENT
 (
-	--A hash value for configuration 1 of identifier values.
-	HASH_1 varchar (255) NOT NULL,
-	--A hash value for configuration k of identifier values.
-	HASH_k varchar (255) NOT NULL,
-	HASHEDID varchar NOT NULL,
-	IDENTIFIERID varchar NOT NULL,
-	PRIMARY KEY(HASHEDID),
-	UNIQUE(IDENTIFIERID),
-	CONSTRAINT fk_IDENTIFIER FOREIGN KEY(IDENTIFIERID) REFERENCES CODI.IDENTIFIER (IDENTIFIER_ID)
+	--An ordinal used to establish a total ordering on the sessions within a fixed curriculum.
+	SESSION_INDEX int NULL,
+	--A number of times a session is administered each unit of time.
+	SESSION_FREQ float NULL,
+	--A measure of the amount of time sessions associated with this curriculum are expected to last.
+	DOSE float NULL,
+	--A unit of time used to describe how often a session is administered. For example, a session administered twice a week has a frequency of 2 and a unit of Weekly. A session administered every other week has a frequency of 0.5 and a unit of Weekly.
+	SESSION_FREQ_UNIT char (1) NULL,
+	--True if the sessions associated with this curriculum include any assessment of lifestyle behaviors related to obesity, such as physical activity, nutrition, screen time, or sleep.
+	SCREENING char (2) NULL,
+	--True if the sessions associated with this curriculum include any advice or direction regarding lifestyle related to obesity, such as physical activity, nutrition, screen time, or sleep.
+	COUNSELING char (2) NULL,
+	--True if the sessions associated with this curriculum include performing at least moderate physical activity; moderate activity requires a moderate amount of effort (5-6 on a scale of 0 to 10) and noticeably accelerates the heart rate and breathing.
+	INTERVENTION_ACTIVITY char (2) NULL,
+	--True if the sessions associated with this curriculum include an activity designed to improve nutrition.
+	INTERVENTION_NUTRITION char (2) NULL,
+	--True if the sessions associated with this curriculum include a navigational service to access benefits or to overcome barriers to care.
+	INTERVENTION_NAVIGATION char (2) NULL,
+	CURRICULUM_COMPONENT_ID varchar,
+	PROGRAMID varchar NOT NULL,
+	CHECK(SESSION_FREQ_UNIT in ('O', 'D', 'W', 'M', 'Y')),
+	CHECK(SCREENING in ('Y', 'N', 'NI', 'UN', 'OT')),
+	CHECK(INTERVENTION_NAVIGATION in ('Y', 'N', 'NI', 'UN', 'OT')),
+	CHECK(INTERVENTION_NUTRITION in ('Y', 'N', 'NI', 'UN', 'OT')),
+	CHECK(INTERVENTION_ACTIVITY in ('Y', 'N', 'NI', 'UN', 'OT')),
+	CHECK(COUNSELING in ('Y', 'N', 'NI', 'UN', 'OT')),
+	PRIMARY KEY(CURRICULUM_COMPONENT_ID),
+	FOREIGN KEY(PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID)
 );
-*/
 
---The SESSION table contains one record for each session. A session is a specific point in time where a child/family is involved in programming that focuses on obesity, obesity prevention, healthy eating, or active living.
+--The ENROLLMENT table contains one record for each person who enrolls in a program.
+CREATE TABLE CODI.ENROLLMENT
+(
+	--A date on which the enrollment was performed.
+	ENROLLMENT_DATE date NULL,
+	--A date on which the individual who enrolled completed the program.
+	COMPLETION_DATE date NULL,
+	--A description of the circumstances under which an individual ended their participation in the program. For example, an individual might complete a program successfully, they might drop out, or they might move to a different state.
+	DISPOSITION_DESCRIPTION varchar (255) NULL,
+	ENROLLMENTID varchar,
+	PATID varchar NOT NULL,
+	PROGRAMID varchar NOT NULL,
+	PRIMARY KEY(ENROLLMENTID),
+	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
+	FOREIGN KEY(PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID)
+);
+--The PREGNANCY_OUTCOME table contains one record for each fetus resulting from the pregnancy.
+CREATE TABLE CODI.PREGNANCY_OUTCOME
+(
+	--A number of weeks of gestation.
+	GESTATION_WEEKS float NULL,
+	--A measure of the child's weight (in pounds) at birth.
+	BIRTH_WT float NULL,
+	--A measure of the child's length (in inches) at birth.
+	BIRTH_HT float NULL,
+	--A measure of the child's weight (in pounds) when discharged.
+	DISCHARGE_WT float NULL,
+	--A date on which the child was discharged.
+	DISCHARGE_DATE date NULL,
+	--True if the child lives with an individual who smokes.
+	HAS_SMOKER_IN_HOUSE boolean NULL,
+	--True if the child has ever been breastfed.
+	EVER_BREASTFED boolean NULL,
+	--A number of times (per day) the child was breastfed, on average.
+	BREAST_FEEDING_FREQ float NULL,
+	--An age of the child (in weeks) when breastfeeding stopped.
+	BREAST_FEEDING_STOPPED_AGE float NULL,
+	--A reason the child stopped breastfeeding. [TODO: Get the codes from WIC and decide if we're going to use those codes.]
+	BREAST_FEEDING_STOPPED_REASON varchar (255) NULL,
+	PREGNANCY_OUTCOME_ID varchar,
+	CHILDID varchar,
+	PARENTID varchar NOT NULL,
+	PRIMARY KEY(PREGNANCY_OUTCOME_ID),
+	UNIQUE(CHILDID),
+	FOREIGN KEY(CHILDID) REFERENCES CDM.DEMOGRAPHIC (PATID),
+	FOREIGN KEY(PARENTID) REFERENCES CODI.PREGNANCY (PREGNANCYID)
+);
+
+--The SESSION table contains one record for each session. A session is a specific point in time where an individual or family is involved in programming that focuses on the prevention or intervention of chronic disease, or chronic-related comorbidities.
 --In a clinical setting, a session corresponds to a visit. There may be multiple visits in a single encounter. The ENCOUNTERID field is required for clinical sessions.
 --In a community setting, a session corresponds to one component of a program. The PROGRAMID field is required for sessions that are components of a program.
 --At least one of those fields should be present in every case.
@@ -227,7 +328,7 @@ CREATE TABLE CODI.SESSION
 (
 	--A date on which the session was conducted.
 	SESSION_DATE date NULL,
-	--A measure of the amount of time spent on this encounter. Researchers can compare the total dose to the prescribed total dose to assess the extent to which a child completed a program.
+	--A measure of the amount of time spent on this encounter. Researchers can compare the total dose to the prescribed total dose to assess the extent to which an individual completed a program.
 	DOSE float NULL,
 	--True if the session included any assessment of lifestyle behaviors related to obesity, such as physical activity, nutrition, screen time, or sleep.
 	SCREENING char (2) NULL,
@@ -239,21 +340,23 @@ CREATE TABLE CODI.SESSION
 	INTERVENTION_NUTRITION char (2) NULL,
 	--True if the session included a navigational service to access benefits or to overcome barriers to care.
 	INTERVENTION_NAVIGATION char (2) NULL,
-	SESSION_ID varchar,
+	SESSIONID varchar,
+	CURRICULUM_COMPONENTID varchar,
+	PROVIDERID varchar,
 	PROGRAMID varchar,
 	PATID varchar NOT NULL,
-	PROVIDERID varchar,
 	ENCOUNTERID varchar,
 	CHECK(SCREENING in ('Y', 'N', 'NI', 'UN', 'OT')),
 	CHECK(COUNSELING in ('Y', 'N', 'NI', 'UN', 'OT')),
 	CHECK(INTERVENTION_ACTIVITY in ('Y', 'N', 'NI', 'UN', 'OT')),
 	CHECK(INTERVENTION_NUTRITION in ('Y', 'N', 'NI', 'UN', 'OT')),
 	CHECK(INTERVENTION_NAVIGATION in ('Y', 'N', 'NI', 'UN', 'OT')),
-	PRIMARY KEY(SESSION_ID),
-	CONSTRAINT fk_PROGRAM FOREIGN KEY(PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAM_ID),
-	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
-	CONSTRAINT fk_PROVIDER FOREIGN KEY(PROVIDERID) REFERENCES CDM.PROVIDER (PROVIDERID),
-	CONSTRAINT fk_ENCOUNTER FOREIGN KEY(ENCOUNTERID) REFERENCES CDM.ENCOUNTER (ENCOUNTERID)
+	PRIMARY KEY(SESSIONID),
+	FOREIGN KEY(CURRICULUM_COMPONENTID) REFERENCES CODI.CURRICULUM_COMPONENT (CURRICULUM_COMPONENT_ID),
+	FOREIGN KEY(PROVIDERID) REFERENCES CDM.PROVIDER (PROVIDERID),
+	FOREIGN KEY(PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID),
+	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
+	FOREIGN KEY(ENCOUNTERID) REFERENCES CDM.ENCOUNTER (ENCOUNTERID)
 );
 
 --The SESSION_ALERT table contains one record for each alert that triggered during a session.
@@ -263,12 +366,12 @@ CREATE TABLE CODI.SESSION_ALERT
 	ALERT_DATE date NULL,
 	--A time that an alert triggered.
 	ALERT_TIME time NULL,
-	SESSION_ALERT_ID varchar,
+	SESSION_ALERTID varchar,
 	SESSIONID varchar NOT NULL,
 	ALERTID varchar NOT NULL,
-	PRIMARY KEY(SESSION_ALERT_ID),
-	CONSTRAINT fk_SESSION FOREIGN KEY(SESSIONID) REFERENCES CODI.SESSION (SESSION_ID),
-	CONSTRAINT fk_ALERT FOREIGN KEY(ALERTID) REFERENCES CODI.ALERT (ALERT_ID)
+	PRIMARY KEY(SESSION_ALERTID),
+	FOREIGN KEY(SESSIONID) REFERENCES CODI.SESSION (SESSIONID),
+	FOREIGN KEY(ALERTID) REFERENCES CODI.ALERT (ALERTID)
 );
 
 --The SDOH_INDICATOR table contains zero to many records for a PATID in DEMOGRAPHIC.
@@ -285,7 +388,7 @@ CREATE TABLE CODI.SDOH_INDICATOR
 	EVIDENCE_EXPLANATION VARCHAR,
 	SDOH_INDICATOR_ID VARCHAR NOT NULL,
 	PRIMARY KEY(SDOH_INDICATOR_ID),
-	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
+	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
 	CHECK(SDOH_INDICATOR_NAME in 
 	('FOOD_SECURITY', 'HOUSING_SECURITY', 'TRANSPORTATION_SECURITY', 
 		'INTERPERSONAL_VIOLENCE_SECURITY', 'FINANCIAL_SECURITY', 'HEALTH_INSURANCE_SECURITY'))
@@ -313,7 +416,7 @@ CREATE TABLE CDM.PRIVATE_DEMOGRAPHIC
 	CHECK (RACE in ('01', '02', '03','04', '05', '06', '07', 'NI', 'UN', 'OT')),
 	CHECK (HISPANIC in ('Y', 'N', 'R', 'NI', 'UN', 'OT')),
 	PRIMARY KEY(PATID),
-	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
+	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
 
 -- Protected table that can be used to store elements of a patient’s address that are considered personal health information (PHI).
@@ -341,5 +444,5 @@ CREATE TABLE CDM.PRIVATE_ADDRESS_HISTORY
 	CHECK(ADDRESS_TYPE in('PO','PH','NI','UN','OT')),
 	CHECK(ADDRESS_PREFERRED in('Y', 'N', 'R', 'NI', 'UN', 'OT')),
 	PRIMARY KEY(ADDRESSID),
-	CONSTRAINT fk_PAT FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
+	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
