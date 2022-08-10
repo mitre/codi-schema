@@ -15,11 +15,11 @@ CREATE SCHEMA CODI;
 CREATE TABLE CODI.ALERT
 (
 	--A description of the purpose of the alert.
-	ALERT_PURPOSE varchar (255) NOT NULL,
+	ALERT_PURPOSE varchar NOT NULL,
 	--A description of the conditions under which the alert triggers.
-	ALERT_TRIGGER varchar (255) NOT NULL,
+	ALERT_TRIGGER varchar NOT NULL,
 	--A description of how the alert is presented to the user.
-	ALERT_FORM varchar (255) NOT NULL,
+	ALERT_FORM varchar NOT NULL,
 	ALERTID varchar,
 	PRIMARY KEY(ALERTID)
 );
