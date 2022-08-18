@@ -200,9 +200,9 @@ CREATE TABLE CODI.SDOH_EVIDENCE_INDICATOR
 	--A date on which a data owner, partner, or researcher has made an assertion indicating the presence of SDOH evidence. This date corresponds to the data partner's most recent determination of available evidence and does not necessarily match submission dates of any of the SDOH evidence. CODI is not expected to maintain a history of assertions, only one assertion based on the data partner's supplied evidence. 
 	EVIDENCE_DATE date NOT NULL,
 	--A name of a table in the CODI schema in which there is some evidence pertaining to the CODI SDOH indicator category. The evidence may be a screening response (in PRO_CM), or a reported problem (in CONDITION or DIAGNOSIS), or some other information stored in a CODI table. 
-	EVIDENCE_TABLE_NAME varchar (255) NULL,
+	EVIDENCE_TABLE_NAME varchar NULL,
 	--For indicator assertions without CODI data evidence; an explanation for the assertion. 
-	EVIDENCE_EXPLANATION varchar (255) NULL,
+	EVIDENCE_EXPLANATION varchar NULL,
 	--An identifier for a specific row in the table referenced in the EVIDENCE_TABLE_NAME that contains evidence of a potential social determinant.
 	EVIDENCE_ROWID varchar NULL,
 	--A social topic area pertaining to circumstances which can determine health outcomes for an individual.
