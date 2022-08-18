@@ -280,7 +280,7 @@ CREATE TABLE CODI.ENROLLMENT
 	--A date on which the individual who enrolled completed the program.
 	COMPLETION_DATE date NULL,
 	--A description of the circumstances under which an individual ended their participation in the program. For example, an individual might complete a program successfully, they might drop out, or they might move to a different state.
-	DISPOSITION_DESCRIPTION varchar (255) NULL,
+	DISPOSITION_DESCRIPTION varchar NULL,
 	ENROLLMENTID varchar,
 	PATID varchar NOT NULL,
 	PROGRAMID varchar NOT NULL,
