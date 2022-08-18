@@ -372,26 +372,6 @@ CREATE TABLE CODI.SESSION_ALERT
 	FOREIGN KEY(ALERTID) REFERENCES CODI.ALERT (ALERTID)
 );
 
---The SDOH_INDICATOR table contains zero to many records for a PATID in DEMOGRAPHIC.
--- An indicator is signals the existence of evidence that pertains to a category of social determinants of health (SDOH) such as a screening response or condition for a person. 
-CREATE TABLE CODI.SDOH_INDICATOR
-(
-	PATID varchar NOT NULL,
-	--A category name for social factors that can determine health outcomes.
-	SDOH_INDICATOR_NAME VARCHAR NOT NULL,
-	--A date on which a data owner, partner, or researcher has made an  assertion indicating the presence of SDOH evidence.
-	ASSERTION_DATE date NOT NULL,
-	-- A name of a table in the CODI SQL schema in which there is some evidence pertaining to the CODI SDOH indicator category.
-	EVIDENCE_TABLE_NAME VARCHAR,
-	EVIDENCE_EXPLANATION VARCHAR,
-	SDOH_INDICATOR_ID VARCHAR NOT NULL,
-	PRIMARY KEY(SDOH_INDICATOR_ID),
-	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
-	CHECK(SDOH_INDICATOR_NAME in 
-	('FOOD_SECURITY', 'HOUSING_SECURITY', 'TRANSPORTATION_SECURITY', 
-		'INTERPERSONAL_VIOLENCE_SECURITY', 'FINANCIAL_SECURITY', 'HEALTH_INSURANCE_SECURITY'))
-);
-
 --Protected table that is intended to provide a standardized representation of the personally-identifiable 
 -- information (PII) that is needed to support local activities related to record linkage. Contains one record per PATID.
 CREATE TABLE CDM.PRIVATE_DEMOGRAPHIC
