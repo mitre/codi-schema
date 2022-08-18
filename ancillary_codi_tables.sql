@@ -118,6 +118,7 @@ CREATE TABLE CODI.PROGRAM
 	LOCATION_LATITUDE numeric (8) NULL,
 	--A latitude of the corresponding address location.
 	LOCATION_LONGITUDE numeric (8) NULL,
+  LOCATION_GEOCODE_ID varchar NULL,
 	--A census year for which the corresponding geocode location applies.
 	LOCATION_BOUNDARY_YEAR numeric (8) NULL,
 	--A numeric estimate of the percentage of all sessions missing from the SESSION table (based on intended dose) for this program; 0% indicates a belief that the session information is fully populated.
@@ -139,6 +140,7 @@ CREATE TABLE CODI.PROGRAM
 	UNIQUE(AFFILIATED_PROGRAMID),
 	--The PROGRAM table contains one record for each distinct program. A program comprises a collection of interventions intended to produce a particular outcome.
 	FOREIGN KEY(AFFILIATED_PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID)
+  --FOREIGN KEY(LOCATION_GEOCODE_ID) REFERENCES CODI.CENSUS_DEMOG (GEOCODE)
 );
 
 --The REFERRAL table contains one record for each outgoing or incoming referral.
