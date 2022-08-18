@@ -95,9 +95,9 @@ CREATE TABLE CODI.PREGNANCY
 CREATE TABLE CODI.PROGRAM
 (
 	--A name of the program (e.g., Girls on the Run).
-	PROGRAM_NAME varchar (255) NOT NULL,
+	PROGRAM_NAME varchar NOT NULL,
 	--A description of the program.
-	PROGRAM_DESCRIPTION varchar (255) NULL,
+	PROGRAM_DESCRIPTION varchar NULL,
 	--True if the aim of the program includes improving nutrition.
 	AIM_NUTRITION boolean NULL,
 	--True if the aim of the program includes improving physical activity.
@@ -113,19 +113,17 @@ CREATE TABLE CODI.PROGRAM
 	--A number of hours delivered each session.
 	PRESCRIBED_SESSION_LENGTH float NULL,
 	--A primary location at which this program's sessions are administered, expressed as an address.
-	LOCATION_ADDRESS varchar (255) NULL,
+	LOCATION_ADDRESS varchar NULL,
 	--A latitude of the corresponding address location.
 	LOCATION_LATITUDE numeric (8) NULL,
 	--A latitude of the corresponding address location.
 	LOCATION_LONGITUDE numeric (8) NULL,
-	--A primary location at which this program's sessions are administered, expressed as a geocode.
-	LOCATION_GEOCODE varchar (15) NULL,
 	--A census year for which the corresponding geocode location applies.
 	LOCATION_BOUNDARY_YEAR numeric (8) NULL,
 	--A numeric estimate of the percentage of all sessions missing from the SESSION table (based on intended dose) for this program; 0% indicates a belief that the session information is fully populated.
 	SESSION_OMISSION_PERCENT float NULL,
 	--A description of the circumstances under which session information for this program is missing; this field is required when the omission percent is greater than 0%.
-	SESSION_OMISSION_DESCRIPTION varchar (255) NULL,
+	SESSION_OMISSION_DESCRIPTION varchar NULL,
 	--True if session information for this program is systematically missing (e.g., because only half of the sessions are documented in an EHR).
 	SESSION_OMISSION_SYSTEMATIC boolean NULL,
 	--A setting in which the program is offered (clinical or community).
@@ -134,7 +132,7 @@ CREATE TABLE CODI.PROGRAM
 	--This can be assessed using logic that considers the length of the GEOCODE value (2 characters for state; 5 characters for county; 11 characters for census tract).
 	LOCATION_GEOLEVEL char (1) NULL,
 	PROGRAMID varchar,
-	AFFILIATED_PROGRAMID varchar NOT NULL,
+	AFFILIATED_PROGRAMID varchar NULL,
 	CHECK(PROGRAM_SETTING in ('CL', 'CO')),
 	CHECK(LOCATION_GEOLEVEL in ('B', 'G', 'T', 'C', 'Z', 'P', 'U')),
 	PRIMARY KEY(PROGRAMID),
@@ -310,7 +308,7 @@ CREATE TABLE CODI.PREGNANCY_OUTCOME
 	--An age of the child (in weeks) when breastfeeding stopped.
 	BREAST_FEEDING_STOPPED_AGE float NULL,
 	--A reason the child stopped breastfeeding. [TODO: Get the codes from WIC and decide if we're going to use those codes.]
-	BREAST_FEEDING_STOPPED_REASON varchar (255) NULL,
+	BREAST_FEEDING_STOPPED_REASON varchar NULL,
 	PREGNANCY_OUTCOME_ID varchar,
 	CHILDID varchar,
 	PARENTID varchar NOT NULL,
