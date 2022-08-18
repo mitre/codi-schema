@@ -339,7 +339,7 @@ CREATE TABLE CODI.SESSION
 	--True if the session included a navigational service to access benefits or to overcome barriers to care.
 	INTERVENTION_NAVIGATION char (2) NULL,
 	SESSIONID varchar,
-	CURRICULUM_COMPONENTID varchar,
+	CURRICULUM_COMPONENT_ID varchar,
 	PROVIDERID varchar,
 	PROGRAMID varchar,
 	PATID varchar NOT NULL,
