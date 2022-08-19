@@ -1,7 +1,5 @@
 # CODI Schema
-This project reads in the [PCORnet Common Data Model v4.1 Parseable Spreadsheet Format](https://github.com/CDMFORUM/CDM-GUIDANCE/raw/master/Files%20for%20CDM%20page/2018-12-05-PCORnet-Common-Data-Model-v4dot1-parseable.xlsx) and will create database tables to represent the CDM.
-
-This project has been updated to support [PCORnet Common Data Model v6.0 Parseable Spreadsheet Format](https://pcornet.org/wp-content/uploads/2021/05/2021_04_12_PCORnet_Common_Data_Model_v6dot0_parseable.xlsx)
+This project reads in the [PCORnet Common Data Model v6.0 Parseable Spreadsheet Format](https://pcornet.org/wp-content/uploads/2021/11/2021_11_29_PCORnet_Common_Data_Model_v6dot0_parseable.xlsx) and will create database tables to represent the CDM.
 
 This application is written in Ruby and it uses the [Sequel](http://sequel.jeremyevans.net/index.html) library to generate the appropriate DDL.
 
@@ -33,6 +31,16 @@ To create the schema, just run the script:
 
 It assumes that the database has been created and is empty. It will create all of the columns after that.
 
+### Postgres
+
+The Postgres user must have `CONNECT` and `CREATE` privileges in order for this script to run successfully. A user can be granted these scopes with:
+
+```sql
+GRANT CONNECT ON DATABASE codi_db TO codi;
+GRANT CREATE ON DATABASE codi_db TO codi;
+```
+
+[Postgres Privileges](https://www.postgresql.org/docs/current/ddl-priv.html)
 
 ## Notice
 
