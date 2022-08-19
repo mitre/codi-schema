@@ -15,11 +15,11 @@ CREATE SCHEMA CODI;
 CREATE TABLE CODI.ALERT
 (
 	--A description of the purpose of the alert.
-	ALERT_PURPOSE varchar (255) NOT NULL,
+	ALERT_PURPOSE varchar NOT NULL,
 	--A description of the conditions under which the alert triggers.
-	ALERT_TRIGGER varchar (255) NOT NULL,
+	ALERT_TRIGGER varchar NOT NULL,
 	--A description of how the alert is presented to the user.
-	ALERT_FORM varchar (255) NOT NULL,
+	ALERT_FORM varchar NOT NULL,
 	ALERTID varchar,
 	PRIMARY KEY(ALERTID)
 );
@@ -95,9 +95,9 @@ CREATE TABLE CODI.PREGNANCY
 CREATE TABLE CODI.PROGRAM
 (
 	--A name of the program (e.g., Girls on the Run).
-	PROGRAM_NAME varchar (255) NOT NULL,
+	PROGRAM_NAME varchar NOT NULL,
 	--A description of the program.
-	PROGRAM_DESCRIPTION varchar (255) NULL,
+	PROGRAM_DESCRIPTION varchar NULL,
 	--True if the aim of the program includes improving nutrition.
 	AIM_NUTRITION boolean NULL,
 	--True if the aim of the program includes improving physical activity.
@@ -113,19 +113,18 @@ CREATE TABLE CODI.PROGRAM
 	--A number of hours delivered each session.
 	PRESCRIBED_SESSION_LENGTH float NULL,
 	--A primary location at which this program's sessions are administered, expressed as an address.
-	LOCATION_ADDRESS varchar (255) NULL,
+	LOCATION_ADDRESS varchar NULL,
 	--A latitude of the corresponding address location.
 	LOCATION_LATITUDE numeric (8) NULL,
 	--A latitude of the corresponding address location.
 	LOCATION_LONGITUDE numeric (8) NULL,
-	--A primary location at which this program's sessions are administered, expressed as a geocode.
-	LOCATION_GEOCODE varchar (15) NULL,
+  LOCATION_GEOCODE_ID varchar NULL,
 	--A census year for which the corresponding geocode location applies.
 	LOCATION_BOUNDARY_YEAR numeric (8) NULL,
 	--A numeric estimate of the percentage of all sessions missing from the SESSION table (based on intended dose) for this program; 0% indicates a belief that the session information is fully populated.
 	SESSION_OMISSION_PERCENT float NULL,
 	--A description of the circumstances under which session information for this program is missing; this field is required when the omission percent is greater than 0%.
-	SESSION_OMISSION_DESCRIPTION varchar (255) NULL,
+	SESSION_OMISSION_DESCRIPTION varchar NULL,
 	--True if session information for this program is systematically missing (e.g., because only half of the sessions are documented in an EHR).
 	SESSION_OMISSION_SYSTEMATIC boolean NULL,
 	--A setting in which the program is offered (clinical or community).
@@ -134,13 +133,14 @@ CREATE TABLE CODI.PROGRAM
 	--This can be assessed using logic that considers the length of the GEOCODE value (2 characters for state; 5 characters for county; 11 characters for census tract).
 	LOCATION_GEOLEVEL char (1) NULL,
 	PROGRAMID varchar,
-	AFFILIATED_PROGRAMID varchar NOT NULL,
+	AFFILIATED_PROGRAMID varchar NULL,
 	CHECK(PROGRAM_SETTING in ('CL', 'CO')),
 	CHECK(LOCATION_GEOLEVEL in ('B', 'G', 'T', 'C', 'Z', 'P', 'U')),
 	PRIMARY KEY(PROGRAMID),
 	UNIQUE(AFFILIATED_PROGRAMID),
 	--The PROGRAM table contains one record for each distinct program. A program comprises a collection of interventions intended to produce a particular outcome.
 	FOREIGN KEY(AFFILIATED_PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID)
+  --FOREIGN KEY(LOCATION_GEOCODE_ID) REFERENCES CODI.CENSUS_DEMOG (GEOCODE)
 );
 
 --The REFERRAL table contains one record for each outgoing or incoming referral.
@@ -161,14 +161,14 @@ CREATE TABLE CODI.REFERRAL
 	--A clinical specialty for which the patient is being referred.
 	DESTINATION_SPECIALTY varchar (10) NULL,
 	REFERRALID varchar,
-	SOURCE_PROVIDERID varchar,
+	SOURCE_PROVIDER_ID varchar,
 	ENCOUNTERID varchar,
 	PATID varchar NOT NULL,
 	CHECK(DIRECTION in ('I', 'O')),
 	CHECK(REFERRAL_STATUS in ('A', 'D', 'NI', 'UN', 'OT')),
 	CHECK(REFERRAL_PRIOR_AUTH in ('Y', 'N', 'R', 'NI', 'UN', 'OT')),
 	PRIMARY KEY(REFERRALID),
-	FOREIGN KEY(SOURCE_PROVIDERID) REFERENCES CDM.PROVIDER (PROVIDERID),
+	FOREIGN KEY(SOURCE_PROVIDER_ID) REFERENCES CDM.PROVIDER (PROVIDERID),
 	FOREIGN KEY(ENCOUNTERID) REFERENCES CDM.ENCOUNTER (ENCOUNTERID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
@@ -202,9 +202,9 @@ CREATE TABLE CODI.SDOH_EVIDENCE_INDICATOR
 	--A date on which a data owner, partner, or researcher has made an assertion indicating the presence of SDOH evidence. This date corresponds to the data partner's most recent determination of available evidence and does not necessarily match submission dates of any of the SDOH evidence. CODI is not expected to maintain a history of assertions, only one assertion based on the data partner's supplied evidence. 
 	EVIDENCE_DATE date NOT NULL,
 	--A name of a table in the CODI schema in which there is some evidence pertaining to the CODI SDOH indicator category. The evidence may be a screening response (in PRO_CM), or a reported problem (in CONDITION or DIAGNOSIS), or some other information stored in a CODI table. 
-	EVIDENCE_TABLE_NAME varchar (255) NULL,
+	EVIDENCE_TABLE_NAME varchar NULL,
 	--For indicator assertions without CODI data evidence; an explanation for the assertion. 
-	EVIDENCE_EXPLANATION varchar (255) NULL,
+	EVIDENCE_EXPLANATION varchar NULL,
 	--An identifier for a specific row in the table referenced in the EVIDENCE_TABLE_NAME that contains evidence of a potential social determinant.
 	EVIDENCE_ROWID varchar NULL,
 	--A social topic area pertaining to circumstances which can determine health outcomes for an individual.
@@ -280,7 +280,7 @@ CREATE TABLE CODI.ENROLLMENT
 	--A date on which the individual who enrolled completed the program.
 	COMPLETION_DATE date NULL,
 	--A description of the circumstances under which an individual ended their participation in the program. For example, an individual might complete a program successfully, they might drop out, or they might move to a different state.
-	DISPOSITION_DESCRIPTION varchar (255) NULL,
+	DISPOSITION_DESCRIPTION varchar NULL,
 	ENROLLMENTID varchar,
 	PATID varchar NOT NULL,
 	PROGRAMID varchar NOT NULL,
@@ -310,7 +310,7 @@ CREATE TABLE CODI.PREGNANCY_OUTCOME
 	--An age of the child (in weeks) when breastfeeding stopped.
 	BREAST_FEEDING_STOPPED_AGE float NULL,
 	--A reason the child stopped breastfeeding. [TODO: Get the codes from WIC and decide if we're going to use those codes.]
-	BREAST_FEEDING_STOPPED_REASON varchar (255) NULL,
+	BREAST_FEEDING_STOPPED_REASON varchar NULL,
 	PREGNANCY_OUTCOME_ID varchar,
 	CHILDID varchar,
 	PARENTID varchar NOT NULL,
@@ -341,7 +341,7 @@ CREATE TABLE CODI.SESSION
 	--True if the session included a navigational service to access benefits or to overcome barriers to care.
 	INTERVENTION_NAVIGATION char (2) NULL,
 	SESSIONID varchar,
-	CURRICULUM_COMPONENTID varchar,
+	CURRICULUM_COMPONENT_ID varchar,
 	PROVIDERID varchar,
 	PROGRAMID varchar,
 	PATID varchar NOT NULL,
@@ -352,7 +352,7 @@ CREATE TABLE CODI.SESSION
 	CHECK(INTERVENTION_NUTRITION in ('Y', 'N', 'NI', 'UN', 'OT')),
 	CHECK(INTERVENTION_NAVIGATION in ('Y', 'N', 'NI', 'UN', 'OT')),
 	PRIMARY KEY(SESSIONID),
-	FOREIGN KEY(CURRICULUM_COMPONENTID) REFERENCES CODI.CURRICULUM_COMPONENT (CURRICULUM_COMPONENT_ID),
+	FOREIGN KEY(CURRICULUM_COMPONENT_ID) REFERENCES CODI.CURRICULUM_COMPONENT (CURRICULUM_COMPONENT_ID),
 	FOREIGN KEY(PROVIDERID) REFERENCES CDM.PROVIDER (PROVIDERID),
 	FOREIGN KEY(PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
@@ -366,32 +366,12 @@ CREATE TABLE CODI.SESSION_ALERT
 	ALERT_DATE date NULL,
 	--A time that an alert triggered.
 	ALERT_TIME time NULL,
-	SESSION_ALERTID varchar,
+	SESSION_ALERT_ID varchar,
 	SESSIONID varchar NOT NULL,
 	ALERTID varchar NOT NULL,
-	PRIMARY KEY(SESSION_ALERTID),
+	PRIMARY KEY(SESSION_ALERT_ID),
 	FOREIGN KEY(SESSIONID) REFERENCES CODI.SESSION (SESSIONID),
 	FOREIGN KEY(ALERTID) REFERENCES CODI.ALERT (ALERTID)
-);
-
---The SDOH_INDICATOR table contains zero to many records for a PATID in DEMOGRAPHIC.
--- An indicator is signals the existence of evidence that pertains to a category of social determinants of health (SDOH) such as a screening response or condition for a person. 
-CREATE TABLE CODI.SDOH_INDICATOR
-(
-	PATID varchar NOT NULL,
-	--A category name for social factors that can determine health outcomes.
-	SDOH_INDICATOR_NAME VARCHAR NOT NULL,
-	--A date on which a data owner, partner, or researcher has made an  assertion indicating the presence of SDOH evidence.
-	ASSERTION_DATE date NOT NULL,
-	-- A name of a table in the CODI SQL schema in which there is some evidence pertaining to the CODI SDOH indicator category.
-	EVIDENCE_TABLE_NAME VARCHAR,
-	EVIDENCE_EXPLANATION VARCHAR,
-	SDOH_INDICATOR_ID VARCHAR NOT NULL,
-	PRIMARY KEY(SDOH_INDICATOR_ID),
-	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
-	CHECK(SDOH_INDICATOR_NAME in 
-	('FOOD_SECURITY', 'HOUSING_SECURITY', 'TRANSPORTATION_SECURITY', 
-		'INTERPERSONAL_VIOLENCE_SECURITY', 'FINANCIAL_SECURITY', 'HEALTH_INSURANCE_SECURITY'))
 );
 
 --Protected table that is intended to provide a standardized representation of the personally-identifiable 
