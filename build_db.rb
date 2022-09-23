@@ -66,9 +66,8 @@ ancillary_tables_sql_files = [
   'ancillary_codi_tables.sql',
   'schema_omop.sql',
   'schema_vdw.sql',
-  #'data_vdw_census_demog.sql'
   'census_demog_2019_lt25.sql',
-  #'census_demog_2019_gt25.sql'
+  'census_demog_2019_gt25.sql'
 ]
 
 ancillary_tables_sql_files.each do |sql_file|
