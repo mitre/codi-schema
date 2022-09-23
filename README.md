@@ -52,8 +52,8 @@ ancillary_tables_sql_files = [
   'ancillary_codi_tables.sql',
   'schema_omop.sql',
   'schema_vdw.sql',
-  'census_demog_2019_lt25.csv',
-  'census_demog_2019_gt25.csv'
+  'census_demog_2019_lt25.sql',
+  'census_demog_2019_gt25.sql'
 ]
 ```
 ### Creating the Schema
