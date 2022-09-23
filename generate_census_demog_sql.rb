@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'csv'
-require 'pry'
 
 census_demog_csvs = ['census_demog_2019_lt25.csv', 'census_demog_2019_gt25.csv']
 

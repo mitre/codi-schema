@@ -16,7 +16,9 @@ This was built using ruby 2.6.2. It used inline [Bundler](https://bundler.io/) t
 ## Running
 
 The connection information exists in the ruby file: `build_db.rb`:
-```
+```ruby
+# build_db.rb
+
 DB = Sequel.connect(adapter: 'postgres', :host => 'localhost',
   :database => 'codi',
   :user => 'codi',
@@ -24,6 +26,37 @@ DB = Sequel.connect(adapter: 'postgres', :host => 'localhost',
 ```
 Change these values as appropriate to point to your database instance. The following adapters should be supported: `postgres`, `mysql`, `oracle`, `mssql`
 
+### Optional Generate Census Demographic Data
+
+Users may provide their own SQL files to generate census demographic data to load into `vdw.census_demog` or use the `generate_census_demog_sql.rb` script
+to generate a SQL insertion file from a CSV with headers matching the columns in the `vdw.census_demog` table.
+
+Users can point the script to the csv files from which to generate the loading scripts by editing the `census_demog_csvs` variable within `generate_census_demog_sql.rb`
+to match the filenames of the source CSVs.
+
+```ruby
+# generate_census_demog_sql.rb
+
+census_demog_csvs = ['census_demog_2019_lt25.csv', 'census_demog_2019_gt25.csv']
+```
+
+`generate_census_demog_sql.rb` will generate files with the same name as the source CSVs, but with the `.sql` file extension.
+
+SQL files generated from `generate_census_demog_sql.rb` or from other sources can be loaded into the database by adding their filenames to the
+`ancilliary_tables_sql_file` array in `build_db.rb`.
+
+```ruby
+# build_db.rb
+
+ancillary_tables_sql_files = [
+  'ancillary_codi_tables.sql',
+  'schema_omop.sql',
+  'schema_vdw.sql',
+  'census_demog_2019_lt25.csv',
+  'census_demog_2019_gt25.csv'
+]
+```
+### Creating the Schema
 
 To create the schema, just run the script:
 
