@@ -65,8 +65,7 @@ end
 ancillary_tables_sql_files = [
   'ancillary_codi_tables.sql',
   'schema_omop.sql',
-  'schema_vdw.sql',
-  'data_vdw_census_demog.sql'
+  'schema_vdw.sql'
 ]
 
 ancillary_tables_sql_files.each do |sql_file|

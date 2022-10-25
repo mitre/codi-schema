@@ -8,7 +8,7 @@
 	3. Added PRIVATE_ADDRESS_HISTORY, PRIVATE_DEMOGRAPHIC to the CDM schema
 		Assuming CDM schema is already created.
 		
-	Updated October 20, 2022 with conform with CODI DM 4.2
+	Updated October 20, 2022 to conform with CODI DM 4.2
 	1. Correcting field name underscores to match PCORnet CDM convention (REFERRAL.SOURCE_PROVIDERID, AFFILIATED_PROGRAMID, CURRICULUM_COMPONENT_ID, PROGRAM_ENROLLMENT_ID)
 	2. Adding fields to the PRIVATE_ADDRESS_HISTORY, and constraining ADDRESS_USE to required NOT NULL to conform to PCORnet CDM
 	3. Adding missing field MODE_TYPE to SESSION
@@ -16,6 +16,10 @@
 	5. Correcting fieldname LOCATION_GEOCODE which intentionally does not follow FK naming convention.
 	6. Correcting fieldname PAT_MIDDLENAME in PRIVATE_DEMOGRAPHIC by removing extra underscore.
 	
+	Udated October 24, 2022
+	1. Removed foreign key LOCATION_GEOCODE to CENSUS_DEMOG from PROGRAM and gave it varchar (15) datatype. CENSUS_DEMOG table has been removed from CODI's VDW. 
+	   CENSUS_LOCATION is meant to have any kind of geocode, even county or state level, if that is all that is known of an individual, or no geocode at all.
+	2. Changed SDOH_CATEGORY field in SDOH_EVIDENCE_INDICATOR to varchar(29) from char(29)
 */
 
 CREATE SCHEMA CODI;
@@ -42,7 +46,7 @@ CREATE TABLE CODI.FAMILY_HISTORY
 	--A date the family history of the condition was reported.
 	REPORT_DATE date NULL,
 	--A condition coding system from which the condition code is drawn.
-	CONDITION_TYPE char (2) NOT NULL,
+	CONDITION_TYPE char (2) NOT NULL, 
 	--An indication of which relative has the condition
 	RELATIONSHIP varchar (9) NULL,
 	FAMILY_HISTORY_ID varchar,
@@ -128,7 +132,7 @@ CREATE TABLE CODI.PROGRAM
 	--A latitude of the corresponding address location.
 	LOCATION_LONGITUDE numeric (8) NULL,
 	--A primary location at which this program's sessions are administered, expressed as a geocode.
-	LOCATION_GEOCODE varchar NULL,
+	LOCATION_GEOCODE varchar (15) NULL,
 	--A census year for which the corresponding geocode location applies.
 	LOCATION_BOUNDARY_YEAR numeric (8) NULL,
 	--A numeric estimate of the percentage of all sessions missing from the SESSION table (based on intended dose) for this program; 0% indicates a belief that the session information is fully populated.
@@ -150,7 +154,6 @@ CREATE TABLE CODI.PROGRAM
 	UNIQUE(AFFILIATED_PROGRAMID),
 	--The PROGRAM table contains one record for each distinct program. A program comprises a collection of interventions intended to produce a particular outcome.
 	FOREIGN KEY(AFFILIATED_PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID)
-  --FOREIGN KEY(LOCATION_GEOCODE_ID) REFERENCES CODI.CENSUS_DEMOG (GEOCODE)
 );
 
 --The REFERRAL table contains one record for each outgoing or incoming referral.
@@ -218,7 +221,7 @@ CREATE TABLE CODI.SDOH_EVIDENCE_INDICATOR
 	--An identifier for a specific row in the table referenced in the EVIDENCE_TABLE_NAME that contains evidence of a potential social determinant.
 	EVIDENCE_ROWID varchar NULL,
 	--A social topic area pertaining to circumstances which can determine health outcomes for an individual.
-	SDOH_CATEGORY char (29) NOT NULL,
+	SDOH_CATEGORY varchar (29) NOT NULL, -- changed from char to varchar
 	SDOH_EVIDENCE_INDICATOR_ID varchar,
 	PATID varchar NOT NULL,
 	CHECK(SDOH_CATEGORY in ('FOOD_DOMAIN', 'HOUSING_STABILITY_DOMAIN', 'HOUSING_ADEQUACY_DOMAIN', 'TRANSPORTATION_DOMAIN', 'INTERPERSONAL_VIOLENCE_DOMAIN', 'FINANCIAL_DOMAIN', 'MATERIAL_NECESSESITIES_DOMAIN', 'EMPLOYMENT_DOMAIN', 'HEALTH_INSURANCE_DOMAIN', 'ELDER_CARE_DOMAIN', 'EDUCATION_DOMAIN', 'STRESS_DOMAIN', 'VETERAN_DOMAIN')),
