@@ -20,6 +20,10 @@
 	1. Removed foreign key LOCATION_GEOCODE to CENSUS_DEMOG from PROGRAM and gave it varchar (15) datatype. CENSUS_DEMOG table has been removed from CODI's VDW. 
 	   CENSUS_LOCATION is meant to have any kind of geocode, even county or state level, if that is all that is known of an individual, or no geocode at all.
 	2. Changed SDOH_CATEGORY field in SDOH_EVIDENCE_INDICATOR to varchar(29) from char(29)
+	
+	Updated October 31, 2022
+	1. Updated HOUSEHOLD_LINK making HOUSEHOLDID and PATID a composit key. This matches the pattern used in LINKID, whereas in PCORnet tables, 
+	there is always a technical key tablename_id, in this case would be household_link_id. The DM IG version 4.2 will reflect this change.
 */
 
 CREATE SCHEMA CODI;
@@ -205,7 +209,7 @@ CREATE TABLE CODI.HOUSEHOLD_LINK
 	-- An iteration of the household record linkage process.
 	LINK_ITERATION int NOT NULL,
 	PATID varchar NOT NULL,
-	PRIMARY KEY(HOUSEHOLDID),
+	PRIMARY KEY(PATID, HOUSEHOLDID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
 
