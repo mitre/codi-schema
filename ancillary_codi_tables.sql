@@ -7,6 +7,23 @@
 	2. Added SDOH_INDICATOR, HOUSEHOLD_LINK to the CODI schema
 	3. Added PRIVATE_ADDRESS_HISTORY, PRIVATE_DEMOGRAPHIC to the CDM schema
 		Assuming CDM schema is already created.
+		
+	Updated October 20, 2022 to conform with CODI DM 4.2
+	1. Correcting field name underscores to match PCORnet CDM convention (REFERRAL.SOURCE_PROVIDERID, AFFILIATED_PROGRAMID, CURRICULUM_COMPONENT_ID, PROGRAM_ENROLLMENT_ID)
+	2. Adding fields to the PRIVATE_ADDRESS_HISTORY, and constraining ADDRESS_USE to required NOT NULL to conform to PCORnet CDM
+	3. Adding missing field MODE_TYPE to SESSION
+	4. Updating tablename and primary key from ENROLLMENT to PROGRAM_ENROLLMENT
+	5. Correcting fieldname LOCATION_GEOCODE which intentionally does not follow FK naming convention.
+	6. Correcting fieldname PAT_MIDDLENAME in PRIVATE_DEMOGRAPHIC by removing extra underscore.
+	
+	Udated October 24, 2022
+	1. Removed foreign key LOCATION_GEOCODE to CENSUS_DEMOG from PROGRAM and gave it varchar (15) datatype. CENSUS_DEMOG table has been removed from CODI's VDW. 
+	   CENSUS_LOCATION is meant to have any kind of geocode, even county or state level, if that is all that is known of an individual, or no geocode at all.
+	2. Changed SDOH_CATEGORY field in SDOH_EVIDENCE_INDICATOR to varchar(29) from char(29)
+	
+	Updated October 31, 2022
+	1. Updated HOUSEHOLD_LINK making HOUSEHOLDID and PATID a composit key. This matches the pattern used in LINKID, whereas in PCORnet tables, 
+	there is always a technical key tablename_id, in this case would be household_link_id. The DM IG version 4.2 will reflect this change.
 */
 
 CREATE SCHEMA CODI;
@@ -33,7 +50,7 @@ CREATE TABLE CODI.FAMILY_HISTORY
 	--A date the family history of the condition was reported.
 	REPORT_DATE date NULL,
 	--A condition coding system from which the condition code is drawn.
-	CONDITION_TYPE char (2) NOT NULL,
+	CONDITION_TYPE char (2) NOT NULL, 
 	--An indication of which relative has the condition
 	RELATIONSHIP varchar (9) NULL,
 	FAMILY_HISTORY_ID varchar,
@@ -118,7 +135,8 @@ CREATE TABLE CODI.PROGRAM
 	LOCATION_LATITUDE numeric (8) NULL,
 	--A latitude of the corresponding address location.
 	LOCATION_LONGITUDE numeric (8) NULL,
-  LOCATION_GEOCODE_ID varchar NULL,
+	--A primary location at which this program's sessions are administered, expressed as a geocode.
+	LOCATION_GEOCODE varchar (15) NULL,
 	--A census year for which the corresponding geocode location applies.
 	LOCATION_BOUNDARY_YEAR numeric (8) NULL,
 	--A numeric estimate of the percentage of all sessions missing from the SESSION table (based on intended dose) for this program; 0% indicates a belief that the session information is fully populated.
@@ -140,7 +158,6 @@ CREATE TABLE CODI.PROGRAM
 	UNIQUE(AFFILIATED_PROGRAMID),
 	--The PROGRAM table contains one record for each distinct program. A program comprises a collection of interventions intended to produce a particular outcome.
 	FOREIGN KEY(AFFILIATED_PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID)
-  --FOREIGN KEY(LOCATION_GEOCODE_ID) REFERENCES CODI.CENSUS_DEMOG (GEOCODE)
 );
 
 --The REFERRAL table contains one record for each outgoing or incoming referral.
@@ -161,14 +178,14 @@ CREATE TABLE CODI.REFERRAL
 	--A clinical specialty for which the patient is being referred.
 	DESTINATION_SPECIALTY varchar (10) NULL,
 	REFERRALID varchar,
-	SOURCE_PROVIDER_ID varchar,
+	SOURCE_PROVIDERID varchar,
 	ENCOUNTERID varchar,
 	PATID varchar NOT NULL,
 	CHECK(DIRECTION in ('I', 'O')),
 	CHECK(REFERRAL_STATUS in ('A', 'D', 'NI', 'UN', 'OT')),
 	CHECK(REFERRAL_PRIOR_AUTH in ('Y', 'N', 'R', 'NI', 'UN', 'OT')),
 	PRIMARY KEY(REFERRALID),
-	FOREIGN KEY(SOURCE_PROVIDER_ID) REFERENCES CDM.PROVIDER (PROVIDERID),
+	FOREIGN KEY(SOURCE_PROVIDERID) REFERENCES CDM.PROVIDER (PROVIDERID),
 	FOREIGN KEY(ENCOUNTERID) REFERENCES CDM.ENCOUNTER (ENCOUNTERID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
@@ -192,7 +209,7 @@ CREATE TABLE CODI.HOUSEHOLD_LINK
 	-- An iteration of the household record linkage process.
 	LINK_ITERATION int NOT NULL,
 	PATID varchar NOT NULL,
-	PRIMARY KEY(HOUSEHOLDID),
+	PRIMARY KEY(PATID, HOUSEHOLDID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
 
@@ -208,10 +225,10 @@ CREATE TABLE CODI.SDOH_EVIDENCE_INDICATOR
 	--An identifier for a specific row in the table referenced in the EVIDENCE_TABLE_NAME that contains evidence of a potential social determinant.
 	EVIDENCE_ROWID varchar NULL,
 	--A social topic area pertaining to circumstances which can determine health outcomes for an individual.
-	SDOH_CATEGORY char (29) NOT NULL,
+	SDOH_CATEGORY varchar (29) NOT NULL, -- changed from char to varchar
 	SDOH_EVIDENCE_INDICATOR_ID varchar,
 	PATID varchar NOT NULL,
-	CHECK(SDOH_CATEGORY in ('FOOD_DOMAIN', 'HOUSING_STABILITY_DOMAIN', 'HOUSING_ADEQUACY_DOMAIN', 'TRANSPORTATION_DOMAIN', 'INTERPERSONAL_VIOLENCE_DOMAIN', 'FINANCIAL_DOMAIN', 'MATERIAL_NECESSESITIES_DOMAIN', 'EMPLOYMENT_DOMAIN', 'HEALTH_INSURANCE_DOMAIN', 'ELDER_CARE_DOMAIN', 'EDUCATION_DOMAIN', 'STRESS_DOMAIN', 'VETERAN_DOMAIN')),
+	CHECK(SDOH_CATEGORY in ('FOOD_DOMAIN', 'HOUSING_STABILITY_DOMAIN', 'HOUSING_ADEQUACY_DOMAIN', 'TRANSPORTATION_DOMAIN', 'INTERPERSONAL_VIOLENCE_DOMAIN', 'FINANCIAL_DOMAIN', 'MATERIAL_NECESSESITIES_DOMAIN', 'EMPLOYMENT_DOMAIN', 'HEALTH_INSURANCE_DOMAIN', 'ELDER_CARE_DOMAIN', 'EDUCATION_DOMAIN', 'STRESS_DOMAIN', 'VETERAN_DOMAIN', 'SOCIAL_CONNECTION_DOMAIN')),
 	PRIMARY KEY(SDOH_EVIDENCE_INDICATOR_ID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
@@ -273,7 +290,7 @@ CREATE TABLE CODI.CURRICULUM_COMPONENT
 );
 
 --The ENROLLMENT table contains one record for each person who enrolls in a program.
-CREATE TABLE CODI.ENROLLMENT
+CREATE TABLE CODI.PROGRAM_ENROLLMENT
 (
 	--A date on which the enrollment was performed.
 	ENROLLMENT_DATE date NULL,
@@ -281,10 +298,10 @@ CREATE TABLE CODI.ENROLLMENT
 	COMPLETION_DATE date NULL,
 	--A description of the circumstances under which an individual ended their participation in the program. For example, an individual might complete a program successfully, they might drop out, or they might move to a different state.
 	DISPOSITION_DESCRIPTION varchar NULL,
-	ENROLLMENTID varchar,
+	PROGRAM_ENROLLMENT_ID varchar,
 	PATID varchar NOT NULL,
 	PROGRAMID varchar NOT NULL,
-	PRIMARY KEY(ENROLLMENTID),
+	PRIMARY KEY(PROGRAM_ENROLLMENT_ID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
 	FOREIGN KEY(PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID)
 );
@@ -328,6 +345,8 @@ CREATE TABLE CODI.SESSION
 (
 	--A date on which the session was conducted.
 	SESSION_DATE date NULL,
+	-- An indication of the way the session was delivered (e.g., individual, group, phone).
+	SESSION_MODE char(1) NULL,
 	--A measure of the amount of time spent on this encounter. Researchers can compare the total dose to the prescribed total dose to assess the extent to which an individual completed a program.
 	DOSE float NULL,
 	--True if the session included any assessment of lifestyle behaviors related to obesity, such as physical activity, nutrition, screen time, or sleep.
@@ -351,6 +370,7 @@ CREATE TABLE CODI.SESSION
 	CHECK(INTERVENTION_ACTIVITY in ('Y', 'N', 'NI', 'UN', 'OT')),
 	CHECK(INTERVENTION_NUTRITION in ('Y', 'N', 'NI', 'UN', 'OT')),
 	CHECK(INTERVENTION_NAVIGATION in ('Y', 'N', 'NI', 'UN', 'OT')),
+	CHECK(SESSION_MODE in ('I', 'G', 'W', 'T', 'M')),
 	PRIMARY KEY(SESSIONID),
 	FOREIGN KEY(CURRICULUM_COMPONENT_ID) REFERENCES CODI.CURRICULUM_COMPONENT (CURRICULUM_COMPONENT_ID),
 	FOREIGN KEY(PROVIDERID) REFERENCES CDM.PROVIDER (PROVIDERID),
@@ -380,7 +400,7 @@ CREATE TABLE CDM.PRIVATE_DEMOGRAPHIC
 (
 	PATID varchar NOT NULL,
 	PAT_FIRSTNAME VARCHAR (255) NOT NULL,
-	PAT_MIDDLE_NAME VARCHAR (255) NULL,
+	PAT_MIDDLENAME VARCHAR (255) NULL,
 	PAT_LASTNAME VARCHAR (255) NOT NULL,
 	PAT_MAIDENNAME VARCHAR (255) NULL,
 	BIRTH_DATE date NULL,
@@ -413,7 +433,9 @@ CREATE TABLE CDM.PRIVATE_ADDRESS_HISTORY
 	ADDRESS_STATE char(2) NULL,
 	ADDRESS_TYPE char(2) NOT NULL,
 	ADDRESS_PREFERRED char(2) NOT NULL,
-	ADDRESS_USE char(2) NULL,
+	ADDRESS_PERIOD_END date NULL,
+	ADDRESS_PERIOD_START date NULL,
+	ADDRESS_USE char(2) NOT NULL,
 	ADDRESS_ZIP9 char(9) NULL,
 	RAW_ADDRESS_TEXT varchar NULL,
 	CHECK (ADDRESS_STATE in ('AL','AK','AS','AZ','AR','CA',
