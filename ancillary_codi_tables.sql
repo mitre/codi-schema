@@ -24,6 +24,10 @@
 	Updated October 31, 2022
 	1. Updated HOUSEHOLD_LINK making HOUSEHOLDID and PATID a composit key. This matches the pattern used in LINKID, whereas in PCORnet tables, 
 	there is always a technical key tablename_id, in this case would be household_link_id. The DM IG version 4.2 will reflect this change.
+
+  Updated January 6, 2023
+  1. Added missing value to ASSET_DELIVERY.ASSET_PURPOSE check constraint: 'PH'
+  2. Updated PROGRAM.LOCATION_LATITUDE to decimal(8,6) and LOCATION_LONGITUDE to decimal(9,6)
 */
 
 CREATE SCHEMA CODI;
@@ -132,9 +136,9 @@ CREATE TABLE CODI.PROGRAM
 	--A primary location at which this program's sessions are administered, expressed as an address.
 	LOCATION_ADDRESS varchar NULL,
 	--A latitude of the corresponding address location.
-	LOCATION_LATITUDE numeric (8) NULL,
+	LOCATION_LATITUDE numeric (8,6) NULL,
 	--A latitude of the corresponding address location.
-	LOCATION_LONGITUDE numeric (8) NULL,
+	LOCATION_LONGITUDE numeric (9,6) NULL,
 	--A primary location at which this program's sessions are administered, expressed as a geocode.
 	LOCATION_GEOCODE varchar (15) NULL,
 	--A census year for which the corresponding geocode location applies.
@@ -249,7 +253,7 @@ CREATE TABLE CODI.ASSET_DELIVERY
 	ASSET_DELIVERY_ID varchar,
 	PATID varchar NOT NULL,
 	PROGRAMID varchar NOT NULL,
-	CHECK(ASSET_PURPOSE in ('CC', 'FO', 'HI', 'TR', 'NI', 'UN', 'OT')),
+	CHECK(ASSET_PURPOSE in ('CC', 'FO', 'HI', 'TR', 'PH', 'NI', 'UN', 'OT')),
 	CHECK(DELIVERY_FREQ_UNIT in ('O', 'D', 'W', 'M', 'Y')),
 	PRIMARY KEY(ASSET_DELIVERY_ID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
