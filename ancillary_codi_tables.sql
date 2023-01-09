@@ -403,17 +403,17 @@ CREATE TABLE CODI.SESSION_ALERT
 CREATE TABLE CDM.PRIVATE_DEMOGRAPHIC
 (
 	PATID varchar NOT NULL,
-	PAT_FIRSTNAME VARCHAR (255) NOT NULL,
-	PAT_MIDDLENAME VARCHAR (255) NULL,
-	PAT_LASTNAME VARCHAR (255) NOT NULL,
-	PAT_MAIDENNAME VARCHAR (255) NULL,
+	PAT_FIRSTNAME VARCHAR NOT NULL,
+	PAT_MIDDLENAME VARCHAR NULL,
+	PAT_LASTNAME VARCHAR NOT NULL,
+	PAT_MAIDENNAME VARCHAR NULL,
 	BIRTH_DATE date NULL,
 	--Sex assigned at birth.
 	SEX char (2) NULL,
 	RACE char (2) NULL,
 	HISPANIC char (2) NULL,
 	--Primary e-mail address for the patient.
-	PRIMARY_EMAIL VARCHAR (255) NULL,
+	PRIMARY_EMAIL VARCHAR NULL,
 	--Primary phone number for the patient (if known). 10-digit US phone number.
 	PRIMARY_PHONE CHAR(10) NULL,
 	CHECK (SEX in ('A', 'F', 'M', 'NI', 'UN', 'OT')),
@@ -429,10 +429,10 @@ CREATE TABLE CDM.PRIVATE_ADDRESS_HISTORY
 	ADDRESSID varchar NOT NULL,
 	PATID varchar NOT NULL,
 	-- Primary address line (e.g., street name and number)
-	ADDRESS_STREET varchar (255) NULL,
+	ADDRESS_STREET varchar NULL,
 	-- Remaining address details (e.g., suite, post office box, other details)
-	ADDRESS_DETAIL varchar (255) NULL,
-	ADDRESS_CITY varchar (255) NULL,
+	ADDRESS_DETAIL varchar NULL,
+	ADDRESS_CITY varchar NULL,
 	ADDRESS_ZIP5 char(5) NULL,
 	ADDRESS_STATE char(2) NULL,
 	ADDRESS_TYPE char(2) NOT NULL,
