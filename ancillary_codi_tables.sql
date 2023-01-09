@@ -28,6 +28,8 @@
   Updated January 6, 2023
   1. Added missing value to ASSET_DELIVERY.ASSET_PURPOSE check constraint: 'PH'
   2. Updated PROGRAM.LOCATION_LATITUDE to decimal(8,6) and LOCATION_LONGITUDE to decimal(9,6)
+  3. Removed 255-char limit from PRIVATE_DEMOGRAPHIC and PRIVATE_ADDRESS_HISTORY columns
+  4. Changed SDOH_EVIDENCE_INDICATOR.SDOH_CATEGORY from full code to short code, changing to varchar(2) from 29.
 */
 
 CREATE SCHEMA CODI;
@@ -229,10 +231,10 @@ CREATE TABLE CODI.SDOH_EVIDENCE_INDICATOR
 	--An identifier for a specific row in the table referenced in the EVIDENCE_TABLE_NAME that contains evidence of a potential social determinant.
 	EVIDENCE_ROWID varchar NULL,
 	--A social topic area pertaining to circumstances which can determine health outcomes for an individual.
-	SDOH_CATEGORY varchar (29) NOT NULL, -- changed from char to varchar
+	SDOH_CATEGORY varchar (2) NOT NULL,
 	SDOH_EVIDENCE_INDICATOR_ID varchar,
 	PATID varchar NOT NULL,
-	CHECK(SDOH_CATEGORY in ('FOOD_DOMAIN', 'HOUSING_STABILITY_DOMAIN', 'HOUSING_ADEQUACY_DOMAIN', 'TRANSPORTATION_DOMAIN', 'INTERPERSONAL_VIOLENCE_DOMAIN', 'FINANCIAL_DOMAIN', 'MATERIAL_NECESSESITIES_DOMAIN', 'EMPLOYMENT_DOMAIN', 'HEALTH_INSURANCE_DOMAIN', 'ELDER_CARE_DOMAIN', 'EDUCATION_DOMAIN', 'STRESS_DOMAIN', 'VETERAN_DOMAIN', 'SOCIAL_CONNECTION_DOMAIN')),
+	CHECK(SDOH_CATEGORY in ('FD', 'HS', 'HA', 'TR', 'IV', 'FI', 'MN', 'EM', 'HI', 'EC', 'ED', 'ST', 'VE', 'SC')),
 	PRIMARY KEY(SDOH_EVIDENCE_INDICATOR_ID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
