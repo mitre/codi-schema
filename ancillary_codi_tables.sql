@@ -24,6 +24,12 @@
 	Updated October 31, 2022
 	1. Updated HOUSEHOLD_LINK making HOUSEHOLDID and PATID a composit key. This matches the pattern used in LINKID, whereas in PCORnet tables, 
 	there is always a technical key tablename_id, in this case would be household_link_id. The DM IG version 4.2 will reflect this change.
+
+  Updated January 6, 2023
+  1. Added missing value to ASSET_DELIVERY.ASSET_PURPOSE check constraint: 'PH'
+  2. Updated PROGRAM.LOCATION_LATITUDE to decimal(8,6) and LOCATION_LONGITUDE to decimal(9,6)
+  3. Removed 255-char limit from PRIVATE_DEMOGRAPHIC and PRIVATE_ADDRESS_HISTORY columns
+  4. Changed SDOH_EVIDENCE_INDICATOR.SDOH_CATEGORY from full code to short code, changing to varchar(2) from 29.
 */
 
 CREATE SCHEMA CODI;
@@ -132,9 +138,9 @@ CREATE TABLE CODI.PROGRAM
 	--A primary location at which this program's sessions are administered, expressed as an address.
 	LOCATION_ADDRESS varchar NULL,
 	--A latitude of the corresponding address location.
-	LOCATION_LATITUDE numeric (8) NULL,
+	LOCATION_LATITUDE numeric (8,6) NULL,
 	--A latitude of the corresponding address location.
-	LOCATION_LONGITUDE numeric (8) NULL,
+	LOCATION_LONGITUDE numeric (9,6) NULL,
 	--A primary location at which this program's sessions are administered, expressed as a geocode.
 	LOCATION_GEOCODE varchar (15) NULL,
 	--A census year for which the corresponding geocode location applies.
@@ -225,10 +231,10 @@ CREATE TABLE CODI.SDOH_EVIDENCE_INDICATOR
 	--An identifier for a specific row in the table referenced in the EVIDENCE_TABLE_NAME that contains evidence of a potential social determinant.
 	EVIDENCE_ROWID varchar NULL,
 	--A social topic area pertaining to circumstances which can determine health outcomes for an individual.
-	SDOH_CATEGORY varchar (29) NOT NULL, -- changed from char to varchar
+	SDOH_CATEGORY varchar (2) NOT NULL,
 	SDOH_EVIDENCE_INDICATOR_ID varchar,
 	PATID varchar NOT NULL,
-	CHECK(SDOH_CATEGORY in ('FOOD_DOMAIN', 'HOUSING_STABILITY_DOMAIN', 'HOUSING_ADEQUACY_DOMAIN', 'TRANSPORTATION_DOMAIN', 'INTERPERSONAL_VIOLENCE_DOMAIN', 'FINANCIAL_DOMAIN', 'MATERIAL_NECESSESITIES_DOMAIN', 'EMPLOYMENT_DOMAIN', 'HEALTH_INSURANCE_DOMAIN', 'ELDER_CARE_DOMAIN', 'EDUCATION_DOMAIN', 'STRESS_DOMAIN', 'VETERAN_DOMAIN', 'SOCIAL_CONNECTION_DOMAIN')),
+	CHECK(SDOH_CATEGORY in ('FD', 'HS', 'HA', 'TR', 'IV', 'FI', 'MN', 'EM', 'HI', 'EC', 'ED', 'ST', 'VE', 'SC')),
 	PRIMARY KEY(SDOH_EVIDENCE_INDICATOR_ID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
@@ -249,7 +255,7 @@ CREATE TABLE CODI.ASSET_DELIVERY
 	ASSET_DELIVERY_ID varchar,
 	PATID varchar NOT NULL,
 	PROGRAMID varchar NOT NULL,
-	CHECK(ASSET_PURPOSE in ('CC', 'FO', 'HI', 'TR', 'NI', 'UN', 'OT')),
+	CHECK(ASSET_PURPOSE in ('CC', 'FO', 'HI', 'TR', 'PH', 'NI', 'UN', 'OT')),
 	CHECK(DELIVERY_FREQ_UNIT in ('O', 'D', 'W', 'M', 'Y')),
 	PRIMARY KEY(ASSET_DELIVERY_ID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID),
@@ -399,17 +405,17 @@ CREATE TABLE CODI.SESSION_ALERT
 CREATE TABLE CDM.PRIVATE_DEMOGRAPHIC
 (
 	PATID varchar NOT NULL,
-	PAT_FIRSTNAME VARCHAR (255) NOT NULL,
-	PAT_MIDDLENAME VARCHAR (255) NULL,
-	PAT_LASTNAME VARCHAR (255) NOT NULL,
-	PAT_MAIDENNAME VARCHAR (255) NULL,
+	PAT_FIRSTNAME VARCHAR NOT NULL,
+	PAT_MIDDLENAME VARCHAR NULL,
+	PAT_LASTNAME VARCHAR NOT NULL,
+	PAT_MAIDENNAME VARCHAR NULL,
 	BIRTH_DATE date NULL,
 	--Sex assigned at birth.
 	SEX char (2) NULL,
 	RACE char (2) NULL,
 	HISPANIC char (2) NULL,
 	--Primary e-mail address for the patient.
-	PRIMARY_EMAIL VARCHAR (255) NULL,
+	PRIMARY_EMAIL VARCHAR NULL,
 	--Primary phone number for the patient (if known). 10-digit US phone number.
 	PRIMARY_PHONE CHAR(10) NULL,
 	CHECK (SEX in ('A', 'F', 'M', 'NI', 'UN', 'OT')),
@@ -425,10 +431,10 @@ CREATE TABLE CDM.PRIVATE_ADDRESS_HISTORY
 	ADDRESSID varchar NOT NULL,
 	PATID varchar NOT NULL,
 	-- Primary address line (e.g., street name and number)
-	ADDRESS_STREET varchar (255) NULL,
+	ADDRESS_STREET varchar NULL,
 	-- Remaining address details (e.g., suite, post office box, other details)
-	ADDRESS_DETAIL varchar (255) NULL,
-	ADDRESS_CITY varchar (255) NULL,
+	ADDRESS_DETAIL varchar NULL,
+	ADDRESS_CITY varchar NULL,
 	ADDRESS_ZIP5 char(5) NULL,
 	ADDRESS_STATE char(2) NULL,
 	ADDRESS_TYPE char(2) NOT NULL,
