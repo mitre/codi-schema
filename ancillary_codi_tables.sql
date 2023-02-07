@@ -30,6 +30,14 @@
   2. Updated PROGRAM.LOCATION_LATITUDE to decimal(8,6) and LOCATION_LONGITUDE to decimal(9,6)
   3. Removed 255-char limit from PRIVATE_DEMOGRAPHIC and PRIVATE_ADDRESS_HISTORY columns
   4. Changed SDOH_EVIDENCE_INDICATOR.SDOH_CATEGORY from full code to short code, changing to varchar(2) from 29.
+
+  Updated Februrary 6, 2023
+  The change from 4.2 to 4.2.1 involves changes to the REFERRAL table to support program referral, 
+   not just clinical specialty referrals. A DESTINATION_PROGRAMID property was added to REFERRAL.
+  Also, the mandatory constraint on SOURCE_ORGANIZATION and DESTINATION ORGANIZATION was removed
+   because these are intended for organizations with CMS clinical numbers, which won’t always apply
+   now that REFERRAL has been opened up to non-clinical referrals.
+  Also added a new SDOH_CATEGORY_TYPE for "UN" - "Unspecified SDOH Domain"
 */
 
 CREATE SCHEMA CODI;
@@ -178,13 +186,14 @@ CREATE TABLE CODI.REFERRAL
 	--An indication of whether prior authorization was required for the referral.
 	REFERRAL_PRIOR_AUTH char (2) NULL,
 	--An organization that initiated the referral.
-	SOURCE_ORGANIZATION varchar (6) NOT NULL,
+	SOURCE_ORGANIZATION varchar (6) NULL,
 	--An organization to which the referral was sent.
-	DESTINATION_ORGANIZATION varchar (6) NOT NULL,
+	DESTINATION_ORGANIZATION varchar (6) NULL,
 	--A clinical specialty for which the patient is being referred.
 	DESTINATION_SPECIALTY varchar (10) NULL,
 	REFERRALID varchar,
 	SOURCE_PROVIDERID varchar,
+	DESTINATION_PROGRAMID varchar NULL,
 	ENCOUNTERID varchar,
 	PATID varchar NOT NULL,
 	CHECK(DIRECTION in ('I', 'O')),
@@ -192,6 +201,7 @@ CREATE TABLE CODI.REFERRAL
 	CHECK(REFERRAL_PRIOR_AUTH in ('Y', 'N', 'R', 'NI', 'UN', 'OT')),
 	PRIMARY KEY(REFERRALID),
 	FOREIGN KEY(SOURCE_PROVIDERID) REFERENCES CDM.PROVIDER (PROVIDERID),
+	FOREIGN KEY(DESTINATION_PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID),
 	FOREIGN KEY(ENCOUNTERID) REFERENCES CDM.ENCOUNTER (ENCOUNTERID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
@@ -234,7 +244,7 @@ CREATE TABLE CODI.SDOH_EVIDENCE_INDICATOR
 	SDOH_CATEGORY varchar (2) NOT NULL,
 	SDOH_EVIDENCE_INDICATOR_ID varchar,
 	PATID varchar NOT NULL,
-	CHECK(SDOH_CATEGORY in ('FD', 'HS', 'HA', 'TR', 'IV', 'FI', 'MN', 'EM', 'HI', 'EC', 'ED', 'ST', 'VE', 'SC')),
+	CHECK(SDOH_CATEGORY in ('FD', 'HS', 'HA', 'TR', 'IV', 'FI', 'MN', 'EM', 'HI', 'EC', 'ED', 'ST', 'VE', 'SC', 'UN')),
 	PRIMARY KEY(SDOH_EVIDENCE_INDICATOR_ID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
