@@ -37,6 +37,7 @@
   Also, the mandatory constraint on SOURCE_ORGANIZATION and DESTINATION ORGANIZATION was removed
    because these are intended for organizations with CMS clinical numbers, which won’t always apply
    now that REFERRAL has been opened up to non-clinical referrals.
+  Also added a new SDOH_CATEGORY_TYPE for "UN" - "Unspecified SDOH Domain"
 */
 
 CREATE SCHEMA CODI;
@@ -243,7 +244,7 @@ CREATE TABLE CODI.SDOH_EVIDENCE_INDICATOR
 	SDOH_CATEGORY varchar (2) NOT NULL,
 	SDOH_EVIDENCE_INDICATOR_ID varchar,
 	PATID varchar NOT NULL,
-	CHECK(SDOH_CATEGORY in ('FD', 'HS', 'HA', 'TR', 'IV', 'FI', 'MN', 'EM', 'HI', 'EC', 'ED', 'ST', 'VE', 'SC')),
+	CHECK(SDOH_CATEGORY in ('FD', 'HS', 'HA', 'TR', 'IV', 'FI', 'MN', 'EM', 'HI', 'EC', 'ED', 'ST', 'VE', 'SC', 'UN')),
 	PRIMARY KEY(SDOH_EVIDENCE_INDICATOR_ID),
 	FOREIGN KEY(PATID) REFERENCES CDM.DEMOGRAPHIC (PATID)
 );
