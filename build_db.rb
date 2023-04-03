@@ -22,7 +22,7 @@ DB.quote_identifiers = false
 TYPE_MAPPING = {'Text' => 'varchar', 'Date' => 'date', 'Number' => 'numeric'}
 
 def data_type(cdm_type_description)
-    md = /RDBMS (Text|Date|Number)(\((\d+|x)\))?/.match(cdm_type_description)
+    md = /RDBMS (Text|Date|Number) ?(\((\d+|x)\))?/.match(cdm_type_description)
     type_description = TYPE_MAPPING[md[1]]
     if md[3] && md[3] != 'x'
         type_description += "(#{md[3]})"
