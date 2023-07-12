@@ -169,7 +169,6 @@ CREATE TABLE CODI.PROGRAM
 	CHECK(PROGRAM_SETTING in ('CL', 'CO')),
 	CHECK(LOCATION_GEOLEVEL in ('B', 'G', 'T', 'C', 'Z', 'P', 'U')),
 	PRIMARY KEY(PROGRAMID),
-	UNIQUE(AFFILIATED_PROGRAMID),
 	--The PROGRAM table contains one record for each distinct program. A program comprises a collection of interventions intended to produce a particular outcome.
 	FOREIGN KEY(AFFILIATED_PROGRAMID) REFERENCES CODI.PROGRAM (PROGRAMID)
 );
